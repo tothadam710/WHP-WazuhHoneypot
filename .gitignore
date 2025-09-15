@@ -6,6 +6,11 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+
+
+# VSCode settings / workspace
+.vscode/
+
 # C extensions
 *.so
 
