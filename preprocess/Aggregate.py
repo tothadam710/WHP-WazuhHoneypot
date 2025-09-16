@@ -54,8 +54,7 @@ def aggregate_os_specific(input_file, output_file):
             v = vuln.get("vulnerability", {})
             cve = v.get("id")
             if cve:
-                cve_counter[cve] += 1
-                cve_details[cve].append({
+                entry = {
                     "severity": v.get("severity"),
                     "score": v.get("score", {}).get("base"),
                     "version": v.get("score", {}).get("version"),
@@ -65,7 +64,12 @@ def aggregate_os_specific(input_file, output_file):
                     "source": v.get("scanner", {}).get("source"),
                     "reference": v.get("scanner", {}).get("reference"),
                     "category": v.get("category")
-                })
+                }
+
+                # Duplikátumok kiszűrése
+                if entry not in cve_details[cve]:
+                    cve_counter[cve] += 1
+                    cve_details[cve].append(entry)
 
     top_cves = dict()
     for cve, count in cve_counter.most_common(10):
