@@ -1,11 +1,11 @@
 import json
 from collections import Counter, defaultdict
-
+# Function to aggregate OS-specific information from the cleaned Wazuh export data
 def aggregate_os_specific(input_file, output_file):
     
     with open(input_file, "r", encoding="utf-8") as f:
         data = json.load(f)
-
+    # Initialize counters for OS-specific information
     os_versions = Counter()
     os_names = Counter()
     os_platforms = Counter()
@@ -15,6 +15,7 @@ def aggregate_os_specific(input_file, output_file):
     cve_counter = Counter()
     cve_details = defaultdict(list)
 
+    # Aggregate data from each agent
     for agent in data.values():
         os_block = agent.get("os", [])
         if isinstance(os_block, list) and os_block:
@@ -50,7 +51,7 @@ def aggregate_os_specific(input_file, output_file):
             name = pkg.get("name")
             if name:
                 package_names[name] += 1
-
+        # Aggregate vulnerability data with duplicate filtering
         for vuln in agent.get("vulnerabilities", []):
             v = vuln.get("vulnerability", {})
             cve = v.get("id")
@@ -67,18 +68,18 @@ def aggregate_os_specific(input_file, output_file):
                     "category": v.get("category")
                 }
 
-                # Duplikátumok kiszűrése
+                # Duplicate filtering
                 if entry not in cve_details[cve]:
                     cve_counter[cve] += 1
                     cve_details[cve].append(entry)
-
+    # Summarize top CVEs with examples
     top_cves = dict()
     for cve, count in cve_counter.most_common(10):
         top_cves[cve] = {
             "count": count,
             "examples": cve_details[cve][:3]
         }
-
+        # Compile the aggregated profile
     profile = {
         "os_versions": dict(os_versions.most_common(10)),
         "os_names": dict(os_names.most_common(10)),
@@ -92,4 +93,4 @@ def aggregate_os_specific(input_file, output_file):
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(profile, f, indent=2, ensure_ascii=False)
 
-    print(f"Profil mentve ide: {output_file}")
+    print(f"Profile saved to: {output_file}")

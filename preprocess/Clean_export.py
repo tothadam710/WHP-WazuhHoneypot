@@ -1,9 +1,9 @@
 import json
-
+# Functions to clean and preprocess the raw Wazuh export data
 def clean_agent_data(agent_data):
     cleaned = {}
 
-    # OS információ
+    # OS information
     if "os" in agent_data and agent_data["os"]:
         os_entry = agent_data["os"][0]
         cleaned["os"] = [{
@@ -92,5 +92,5 @@ def clean_wazuh_export(input_file, output_file):
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(cleaned_data, f, indent=2, ensure_ascii=False)
 
-    print(f"Tisztított adat mentve ide: {output_file}")
+    print(f"Cleaned data saved to: {output_file}")
 

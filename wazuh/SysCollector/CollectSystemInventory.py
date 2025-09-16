@@ -3,35 +3,35 @@ import os
 from dotenv import load_dotenv
 import json
 
-# --- Konfiguráció ---
+#env variables and constants for the module
 ENDPOINTS = ["os","hardware","netiface","netproto","hotfixes","packages","processes","ports"]
 DOTENV_PATH = "../../.env"
 
-# --- Segédfüggvények ---
+#load config from .env
 def load_config():
     load_dotenv(dotenv_path=DOTENV_PATH)
     API_URL = os.getenv("WAZUH_MANAGER")
     return API_URL
 
+# API call to get the list of agents with Token authentication
 def get_agents(token):
-    """Lekéri az összes agent id-t"""
     API_URL = load_config()
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{API_URL}/agents", headers=headers, verify=False)
 
     if response.status_code == 200:
         items = response.json().get("data", {}).get("affected_items", [])
-        items.pop(0)
+        items.pop(0) #remove the first item which is wazuh manager itself
         return [item.get("id") for item in items]
     else:
-        print("Hiba az agentek lekérdezésénél:", response.text)
+        print("Error during agent retrieval:", response.text)
         return []
-    
+# Function to get vulnerabilities for a specific agent from Elasticsearch    
 def get_vulnerabilities(agent_id):
     ES_URL = os.getenv("Indexer")
     ES_USER = os.getenv("Indexer_user")
     ES_PASS = os.getenv("Indexer_password")
-    """Lekéri az agenthez tartozó vulnerabilities-t Elasticsearchből GET + body"""
+   
     query = {
         "_source": [
             "agent.name",
@@ -55,7 +55,7 @@ def get_vulnerabilities(agent_id):
             }
         }
     }
-
+    #API call to Elasticsearch to get vulnerabilities with basic auth
     response = requests.get(
         f"{ES_URL}/wazuh-states-vulnerabilities-*/_search",
         auth=(ES_USER, ES_PASS),
@@ -69,11 +69,11 @@ def get_vulnerabilities(agent_id):
         print(hits)
         return [hit["_source"] for hit in hits]
     else:
-        print(f"Hiba a vulnerabilities lekérdezésnél (agent {agent_id}):", response.text)
+        print(f"Error during vulnerability retrieval (agent {agent_id}):", response.text)
         return []
-
+# Function to get syscollector data for a specific agent and endpoint
 def get_syscollector_data(token, agent_id, endpoint):
-    """Lekéri egy adott agent syscollector adatait"""
+    
     API_URL = load_config()
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{API_URL}/syscollector/{agent_id}/{endpoint}", headers=headers, verify=False)
@@ -81,15 +81,15 @@ def get_syscollector_data(token, agent_id, endpoint):
     if response.status_code == 200:
         return response.json().get("data", {}).get("affected_items", [])
     else:
-        print(f"Hiba a syscollector lekérdezésnél (agent {agent_id}, endpoint {endpoint}):", response.text)
+        print(f"Error during syscollector retrieval (agent {agent_id}, endpoint {endpoint}):", response.text)
         return []
     
 
     
 
-
+#Function to collect all syscollector data and vulnerabilities for all agents and return as a nested dictionary
 def collect_all_syscollector(token):
-    """Összegyűjti minden agent syscollector adatait fix endpointokkal"""
+    
     agents = get_agents(token)
     all_data = {}
 
