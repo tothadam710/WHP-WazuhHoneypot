@@ -1,7 +1,8 @@
-def aggregate_os_specific(input_file, output_file):
-    import json
-    from collections import Counter, defaultdict
+import json
+from collections import Counter, defaultdict
 
+def aggregate_os_specific(input_file, output_file):
+    
     with open(input_file, "r", encoding="utf-8") as f:
         data = json.load(f)
 

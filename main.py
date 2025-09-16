@@ -3,7 +3,6 @@ import json
 from wazuh.Authentication.Token_generate import generate_JWT_token
 from wazuh.SysCollector.CollectSystemInventory import collect_all_syscollector
 from preprocess.Clean_export import clean_wazuh_export
-#from preprocess.Aggregate import aggregate_honeypot_patterns, aggregate_os_specific
 from preprocess.Separate_OS import split_by_os
 from preprocess.Aggregate import aggregate_os_specific
 
