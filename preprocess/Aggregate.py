@@ -13,6 +13,7 @@ def aggregate_os_specific(input_file, output_file):
     process_names = Counter()
     package_names = Counter()
     cve_counter = Counter()
+    hotfixes = Counter()
     cve_details = defaultdict(list)
 
     # Aggregate data from each agent
@@ -47,6 +48,12 @@ def aggregate_os_specific(input_file, output_file):
             if name:
                 process_names[name] += 1
 
+        if input_file.endswith("windows_agents.json"):
+            for hotfix in agent.get("hotfixes", []):
+                h = hotfix.get("hotfix")
+                if h:
+                    hotfixes[h] += 1
+
         for pkg in agent.get("packages", []):
             name = pkg.get("name")
             if name:
@@ -80,14 +87,26 @@ def aggregate_os_specific(input_file, output_file):
             "examples": cve_details[cve][:3]
         }
         # Compile the aggregated profile
-    profile = {
-        "os_versions": dict(os_versions.most_common(10)),
-        "os_names": dict(os_names.most_common(10)),
-        "os_platforms": dict(os_platforms.most_common(10)),
-        "open_ports": dict(open_ports.most_common(20)),
-        "process_names": dict(process_names.most_common(15)),
-        "package_names": dict(package_names.most_common(15)),
-        "vulnerabilities": top_cves
+    if input_file.endswith("windows_agents.json"):
+        profile = {
+            "os_versions": dict(os_versions.most_common(10)),
+            "os_names": dict(os_names.most_common(10)),
+            "os_platforms": dict(os_platforms.most_common(10)),
+            "hotfixes": dict(hotfixes.most_common(15)),
+            "open_ports": dict(open_ports.most_common(20)),
+            "process_names": dict(process_names.most_common(15)),
+            "package_names": dict(package_names.most_common(15)),
+            "vulnerabilities": top_cves
+    }
+    else:
+        profile = {
+            "os_versions": dict(os_versions.most_common(10)),
+            "os_names": dict(os_names.most_common(10)),
+            "os_platforms": dict(os_platforms.most_common(10)),
+            "open_ports": dict(open_ports.most_common(20)),
+            "process_names": dict(process_names.most_common(15)),
+            "package_names": dict(package_names.most_common(15)),
+            "vulnerabilities": top_cves
     }
 
     with open(output_file, "w", encoding="utf-8") as f:
