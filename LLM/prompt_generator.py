@@ -1,100 +1,166 @@
-import json
+import random
+from datetime import datetime
+from typing import Dict, Optional
 
-def generate_cowrie_prompt_detailed(wazuh_data: dict) -> str:
+def _format_ps_example(processes: Dict[str, int], cap_per_proc:int=4):
     """
-    Generates a highly detailed prompt for an LLM to create a Cowrie honeypot configuration,
-    persona, and all necessary deployment files based on Wazuh OS, package, process,
-    and detailed CVE data.
+    Build a short ps/top style preview (text block) from process counts.
+    Returns multiple lines like: " 1754 nginx: worker process    12.4%  2.3%"
     """
-    
-    os_info = wazuh_data.get("os_names", {})
-    os_versions = wazuh_data.get("os_versions", {})
-    os_platforms = wazuh_data.get("os_platforms", {})
-    open_ports = wazuh_data.get("open_ports", {})
-    processes = wazuh_data.get("process_names", {})
-    packages = wazuh_data.get("package_names", {})
-    vulnerabilities = wazuh_data.get("vulnerabilities", {})
+    pid = 1500
+    lines = []
+    # heuristic ordering: highest-count first
+    for name, cnt in sorted(processes.items(), key=lambda x: -x[1])[:18]:
+        display_name = name
+        # make nginx-like worker label if nginx appears
+        if "nginx" in name.lower():
+            display_name = "nginx: worker process"
+        # sanitize long kernel names minimally
+        display_name = display_name.replace(" ", "_")
+        for i in range(min(cnt, cap_per_proc)):
+            pid += random.randint(1,120)
+            # cpu/mem heuristics
+            if any(x in name.lower() for x in ("mysql","mysqld","java")):
+                cpu = round(random.uniform(3.0, 20.0),1)
+                mem = round(random.uniform(3.0, 18.0),1)
+            elif name.startswith("kworker") or name.startswith("khung") or name.startswith("kdev"):
+                cpu = round(random.uniform(0.0, 3.0),1)
+                mem = round(random.uniform(0.0, 1.0),1)
+            elif "unattended" in name.lower():
+                cpu = round(random.uniform(1.0, 8.0),1)
+                mem = round(random.uniform(0.2, 2.0),1)
+            else:
+                cpu = round(random.uniform(0.0, 6.0),1)
+                mem = round(random.uniform(0.1, 3.0),1)
+            lines.append(f"{pid:>5} {display_name:<28} {cpu:>5}% {mem:>5}%")
+    return "\n    ".join(lines)
 
-    # Dynamic OS/platform info
-    os_summary = ", ".join([f"{name} {version}" for name, version in os_versions.items()])
-    os_list = ", ".join(os_info.keys())
-    platform_list = ", ".join(os_platforms.keys())
-    
-    # Processes and packages
-    process_list = ", ".join(processes.keys())
-    package_list = ", ".join(packages.keys())
+def _format_package_preview(packages: Dict[str,int], max_show:int=12):
+    """
+    Build apt/dpkg-like preview lines referencing package names from inventory.
+    Show installed lines and inject one plausible dpkg warning referencing an actual package.
+    """
+    pk_lines = []
+    items = list(packages.items())[:max_show] if packages else []
+    for pkg, count in items:
+        # version is not present in your dict; show installed hint using count as pseudo-version hint
+        pk_lines.append(f"{pkg} installed (meta-count={count})")
+    if items:
+        broken_pkg = items[min(2, len(items)-1)][0]
+        pk_lines.append(f"dpkg: warning: while removing package {broken_pkg}: dependency problems - not fully installed (simulated)")
+        pk_lines.append(f"apt: E: Sub-process /usr/bin/dpkg returned an error code (1) (simulated)")
+    return "\n    ".join(pk_lines)
 
-    # Format detailed CVE information
-    cve_details = []
-    for cve, cve_data in vulnerabilities.items():
-        examples = cve_data.get("examples", [])
-        for example in examples:
-            cve_details.append(
-                f"- {cve} (Severity: {example['severity']}, Score: {example['score']})\n"
-                f"  - Published: {example.get('published_at', 'Unknown')}\n"
-                f"  - Affected Version: {example.get('version', 'Unknown')}\n"
-                f"  - Condition: {example.get('condition', 'Unknown')}\n"
-                f"  - Category: {example.get('category', 'Unknown')}\n"
-                f"  - Source: {example.get('source', 'Unknown')}\n"
-                f"  - Reference: {example.get('reference', 'Unknown')}\n"
-                f"  - Description: {example.get('description', 'No description')}\n"
-                f"  - Honeypot Simulation:\n"
-                f"      - Simulate realistic exploit behavior corresponding to this CVE\n"
-                f"      - Show errors, crashes, or anomalies consistent with affected version\n"
-                f"      - Log all attempts in a realistic manner"
-            )
-    cve_text = "\n".join(cve_details)
+def generate_cowrie_prompt_detailed(wazuh_data: Dict, sample_zip: Optional[str]=None) -> str:
+    """
+    Produce a highly detailed prompt that embeds the exact package/process inventory
+    from the provided `wazuh_data` dict so the LLM output mimics a host with those
+    packages installed and those processes running.
+
+    Returns a single prompt string ready to pass to an LLM. The LLM must output only
+    file blocks (see instructions inside).
+    """
+
+    # Basic environment extraction with fallbacks
+    os_names = ", ".join(wazuh_data.get("os_names", {}).keys()) if wazuh_data.get("os_names") else "Ubuntu"
+    os_versions = ", ".join(wazuh_data.get("os_versions", {}).keys()) if wazuh_data.get("os_versions") else "16.04.7 LTS"
+    platforms = ", ".join(wazuh_data.get("os_platforms", {}).keys()) if wazuh_data.get("os_platforms") else "x86_64"
+    open_ports = ", ".join(wazuh_data.get("open_ports", {}).keys()) if wazuh_data.get("open_ports") else "22"
+
+    processes = wazuh_data.get("process_names", {}) or {}
+    packages = wazuh_data.get("package_names", {}) or {}
+    vulnerabilities = (wazuh_data.get("vulnerabilities") or {}).keys()
+    vuln_preview = ", ".join(list(vulnerabilities)[:8]) if vulnerabilities else "none"
+
+    # Derive human-like usernames (if user list present else sensible defaults)
+    # prefer to keep consistent names if some passwd/userdb files exist in sample_zip (not handled here)
+    human_users = ["admin","deploy","git","ci-runner","ops","anna","peter","nora","kevin","maria"]
+    # If passwd in sample_zip we might extract real users; omitted for brevity.
+
+    # Build ps and package preview snippets inserted into the prompt (concrete examples)
+    ps_preview = _format_ps_example(processes)
+    pk_preview = _format_package_preview(packages)
+
+    now = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
     prompt = f"""
-You are a cybersecurity expert tasked with configuring a Cowrie honeypot
-to mimic a real system environment as closely as possible for threat intelligence collection.
-Use the following OS, processes, packages, open ports, and detailed CVE information
-to generate a highly realistic honeypot persona and configuration.
+You are a senior on-call Linux sysadmin and intrusion analyst. Generate a set of **highly realistic** Cowrie honeypot filesystem artifacts.
+**OUTPUT MUST BE ONLY file blocks**, in this exact format (nothing else):
 
-System Information:
-- Operating Systems: {os_list} (versions: {os_summary}, platforms: {platform_list})
-- Open Ports: {', '.join(open_ports.keys()) if open_ports else 'None'}
-- Running Processes: {process_list}
-- Installed Packages: {package_list}
+--- FILE: <relative/path/to/file> ---
+<file content>
 
-Vulnerabilities (CVE) to simulate realistically:
-{cve_text}
+Use the exact inventory below to make the artifacts look like they came from a real Ubuntu 16.04 host. The generated files must reference these package names and must contain ps/top snapshots consistent with the running processes counts.
 
-Instructions for the LLM:
-1. Generate a Cowrie honeypot configuration that mimics this environment, including:
-   - Appropriate SSH banner and login prompts
-   - Realistic shell environment reflecting running processes
-   - Installed package versions where feasible
-   - Services listening on the specified ports
-   - Behavioral quirks consistent with the OS and packages
+ENVIRONMENT (use these values)
+- OS Names: {os_names}
+- OS Versions: {os_versions}
+- Platform: {platforms}
+- Open ports: {open_ports}
 
-2. Define a persona for the honeypot that attackers would expect:
-   - Typical usernames
-   - Directory structures
-   - Commonly used commands
-   - Simulated vulnerable behavior aligned with the CVEs listed
+INSTALLED PACKAGES (use these package names in apt/dpkg-like outputs)
+    {pk_preview}
 
-3. Include CVE-based behavior simulation:
-   - For each CVE, describe how the honeypot should respond if an attacker attempts an exploit
-   - Simulate errors, crashes, or information leaks where appropriate, without compromising the host
-   - Focus on realism and engagement for threat intelligence purposes
+RUNNING PROCESSES (ps/top style examples — reflect multiplicity, varied PIDs & usage)
+    {ps_preview}
 
-4. Generate all necessary deployment files for Cowrie, including:
-   - cowrie.cfg
-   - userdb.txt with usernames and hashed passwords
-   - etc/passwd and etc/shadow for system users
-   - etc/hostname and etc/motd for realistic login messages
-   - log/ directory for CVE simulation logging
-   - Scripts or commands for safely simulating CVE exploits
+NOTABLE CVEs (observational only; do not produce exploit code): {vuln_preview}
 
-Output each file separately with clear file headers, e.g.:
+MANDATORY FORMAT & SAFETY RULES
+- DO NOT include working exploits, malware, or runnable payloads.
+- DO NOT include any real credentials or real private keys.
+- All hashes/tokens must be synthetic, random-looking strings (e.g. $6$... for /etc/shadow, $2y$... for userdb).
+- Use RFC-3339 timestamps **without fractional seconds** (e.g. {now}).
+- Output ONLY file blocks; nothing outside them.
+- Keep files moderately sized (realistic, not enormous).
 
---- FILE: cowrie.cfg ---
-<content>
+REQUIRED FILES (generate each as a file block)
+1) --- FILE: etc/passwd ---
+   - Include standard system accounts (root, daemon, bin, sys, sync, mail, www-data, mysql)
+   - Include 10 human users (UIDs starting at 1000) — use human-like names (examples: {', '.join(human_users[:8])})
+   - Home directories (/home/<user>) and shell set to /bin/bash or /bin/zsh.
 
---- FILE: userdb.txt ---
-<content>
+2) --- FILE: etc/shadow ---
+   - One line per username; use SHA-512 style $6$rounds=656000$<salt>$<randomstring> (alnum + ./).
+   - Values must be synthetic and unique per user.
 
-Ensure all files are consistent with each other and the persona you defined. Include realistic CVE behavior in logs or scripts.
+3) --- FILE: etc/hostname ---
+   - Choose a hostname consistent with services (e.g., web-01 or app-frontend if nginx/unattended-upgr present).
+
+4) --- FILE: etc/motd and etc/issue ---
+   - Ubuntu 16.04 style greeting including OS version and a "Last security update" date (simulated).
+   - Include 1–2 management/documentation URLs.
+
+5) --- FILE: cowrie.cfg ---
+   - Realistic sections: [honeypot], [ssh], [shell], [output_jsonlog], [output_textlog].
+   - listen_endpoints on port 22; include 1–2 commented alternate ports.
+   - userdb_file -> etc/userdb.txt; log files in var/log/cowrie.
+   - Add a couple admin comments/TODOs (typos acceptable). No private keys.
+
+6) --- FILE: etc/userdb.txt ---
+   - One bcrypt-like token per human user: format "user:$2y$10$<22-28 chars>"
+   - Tokens should vary in length/appearance.
+
+7) --- FILE: log/cowrie.log --- and --- FILE: log/auth.log ---
+   - Use RFC5737 attacker IPs: 192.0.2.x, 198.51.100.x, 203.0.113.x.
+   - Simulate a realistic attacker session:
+       * repeated failed logins from one IP (use different usernames from /etc/passwd)
+       * one successful login for a non-root user from another IP
+       * cowrie.session lines: executed commands (id; uname -a; ps aux; cat /proc/cpuinfo | head -n1; sudo -l)
+       * explicit session open/close lines (pam_unix session opened/closed)
+       * interleave kernel/syslog noise: "TCP: Possible SYN flooding", "BUG: unable to handle kernel NULL pointer dereference", "Connection reset by peer", "broken pipe"
+       * include ps/top snapshots that **use the exact process names** from the RUNNING PROCESSES snippet above (repeat worker entries with distinct PIDs)
+       * when attacker inspects services (e.g., `systemctl status ufw`), include output that references the `ufw` package (or other packages listed)
+
+8) --- FILE: logs/cve_simulation.log ---
+   - One RFC-3339 timestamped line per CVE (use CVE IDs from input), each with a short observational symptom (no exploit code). Example format:
+       2025-09-23T21:18:58Z CVE-2022-37434 — gzip header parsing failed; connection reset
+
+EXTRA REALISM (strongly encouraged)
+- Add a fabricated /proc/cpuinfo single-line: "model name : Intel(R) Xeon(R) CPU E5-2676 v3 @ 2.40GHz"
+- Add systemd/CRON noise: "Started Daily apt download activities", "CRON[1234]: pam_unix(cron:session): session opened for user root"
+- In cowrie.cfg, keep a commented legacy banner or alternate listen_endpoints line.
+
+NOW: produce **ONLY** the files requested above as file blocks with the described realism. Use the exact package/process names from the inventory when useful.
 """
     return prompt.strip()

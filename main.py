@@ -6,8 +6,7 @@ from wazuh.SysCollector.CollectSystemInventory import collect_all_syscollector
 from preprocess.Clean_export import clean_wazuh_export
 from preprocess.Separate_OS import split_by_os
 from preprocess.Aggregate import aggregate_os_specific
-from LLM.cowrie_config_no_limit import call_llm, save_files_from_response
-#from LLM.cowrie_config import call_llm, save_files_from_response
+from LLM.cowrie_config import call_llm, save_files_from_response
 
 
 # main.py for entry point of the project
