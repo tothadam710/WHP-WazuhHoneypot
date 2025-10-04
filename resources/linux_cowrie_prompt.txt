@@ -1,0 +1,125 @@
+You are a senior on-call Linux sysadmin and intrusion analyst. Generate a set of **highly realistic** Cowrie honeypot filesystem artifacts.
+**OUTPUT MUST BE ONLY file blocks**, in this exact format (nothing else):
+
+--- FILE: <relative/path/to/file> ---
+<file content>
+
+Use the inventory below to make the artifacts look like they came from a real Ubuntu 16.04.7 LTS (Xenial Xerus) host (ubuntu platform).
+The generated files must reference these package names and contain ps/top snapshots consistent with the running processes counts.
+
+ENVIRONMENT (use these values)
+- OS Name: Ubuntu
+- OS Version: 16.04.7 LTS (Xenial Xerus)
+- Platform: ubuntu
+- Open port: local:68
+
+INSTALLED PACKAGES (top 12 most common)
+    ufw installed (meta-count=2)
+    unattended-upgrades installed (meta-count=2)
+    command-not-found installed (meta-count=2)
+    passwd installed (meta-count=1)
+    python3-update-manager installed (meta-count=1)
+    dmsetup installed (meta-count=1)
+    libparted2 installed (meta-count=1)
+    libmpfr4 installed (meta-count=1)
+    python-debian installed (meta-count=1)
+    zerofree installed (meta-count=1)
+    libgdbm3 installed (meta-count=1)
+    initramfs-tools installed (meta-count=1)
+    dpkg: warning: while removing package command-not-found: dependency problems - not fully installed (simulated)
+    apt: E: Sub-process /usr/bin/dpkg returned an error code (1) (simulated)
+
+RUNNING PROCESSES (top 15 most common — ps/top style examples)
+     1514 bioset                         2.0%   0.2%
+     1569 bioset                         3.2%   0.5%
+     1675 bioset                         5.4%   0.5%
+     1768 bioset                         3.3%   0.9%
+     1819 systemd                        1.2%   1.5%
+     1938 systemd                        3.7%   1.7%
+     1953 iscsid                         5.9%   0.7%
+     2049 iscsid                         0.8%   1.8%
+     2106 bash                           0.2%   2.2%
+     2126 bash                           1.3%   1.3%
+     2232 watchdog/0                     5.1%   0.3%
+     2329 unattended-upgr                4.5%   0.6%
+     2338 login                          5.5%   1.0%
+     2412 kdevtmpfs                      1.4%   0.1%
+     2486 (sd-pam)                       4.3%   0.1%
+     2519 netns                          3.6%   1.6%
+     2633 kpsmoused                      3.5%   1.8%
+     2735 sudo                           4.0%   2.2%
+     2751 perf                           1.2%   1.0%
+     2813 kworker/0:1H                   1.1%   0.4%
+     2825 khungtaskd                     0.1%   0.1%
+
+NOTABLE CVEs (selected top severe CVEs from inventory — informational only): CVE-2022-37434, CVE-2018-25032, CVE-2022-42898, CVE-2023-50387, CVE-2023-50868
+
+VULNERABILITY SIMULATION (IMPORTANT — NO EXPLOITS)
+- Based on the inventory, the following CVEs were identified as High/Critical and should be used to make the honeypot appear **deliberately vulnerable** (simulate only; DO NOT include exploit code or PoCs):
+    - CVE-2022-37434 (Critical) -> packages: ['(no direct match)'] ; note: Package less than 0:3.1.1-3ubuntu1.3+esm2
+    - CVE-2018-25032 (High) -> packages: ['(no direct match)'] ; note: Package less than 0:3.1.1-3ubuntu1.3+esm1
+    - CVE-2022-42898 (High) -> packages: ['(no direct match)'] ; note: Package less than 0:1.7~git20150920+dfsg-4ubuntu1.16.04.1+esm3
+    - CVE-2023-50387 (High) -> packages: ['(no direct match)'] ; note: Package less than 1:9.10.3.dfsg.P4-8ubuntu1.19+esm8
+    - CVE-2023-50868 (High) -> packages: ['(no direct match)'] ; note: Package less than 1:9.10.3.dfsg.P4-8ubuntu1.19+esm8
+
+For each listed CVE above, instruct the LLM to:
+  * Show a plausible older/vulnerable package version in package lists (e.g., "zlib1g 1.2.8.dfsg-2ubuntu4.3 installed (vulnerable)").
+  * In logs/cve_simulation.log add one RFC-3339 timestamped line describing an observed symptom (e.g., "gzip header parsing failed; connection reset").
+  * In dpkg -l / rpm -qa / or service status outputs show the affected package and a simulated "Pending security update" or "Fix available but not applied" note.
+  * Avoid any exploit, code snippet, PoC, shell commands to exploit the vulnerability, or private credentials — only textual observations and version strings.
+
+MANDATORY FORMAT & SAFETY RULES
+- DO NOT include working exploits, malware, or runnable payloads.
+- DO NOT include any real credentials, real private keys, or real secrets.
+- All hashes/tokens must be synthetic, random-looking strings.
+- Use RFC-3339 timestamps **without fractional seconds** (e.g. 2025-10-04T08:43:34Z).
+- Output ONLY file blocks; nothing outside them.
+- Keep files realistic but moderately sized.
+
+REQUIRED FILES (generate each as a file block)
+1) --- FILE: etc/passwd ---
+   - Include standard system accounts (root, daemon, bin, sys, sync, mail, www-data, mysql)
+   - Include 10 human users (UIDs starting at 1000) — use human-like names (examples: admin, deploy, git, ci-runner, ops, anna, peter, nora)
+   - Home directories (/home/<user>) and shell set to /bin/bash or /bin/zsh.
+
+2) --- FILE: etc/shadow ---
+   - One line per username; use SHA-512 style $6$rounds=656000$<salt>$<randomstring> (alnum + ./).
+   - Values must be synthetic and unique per user.
+
+3) --- FILE: etc/hostname ---
+   - Choose a hostname consistent with services (e.g., web-01 or app-frontend if nginx/unattended-upgr present).
+
+4) --- FILE: etc/motd and etc/issue ---
+   - Provide a distribution-style greeting that references Ubuntu 16.04.7 LTS (Xenial Xerus).
+   - Include "Last security update" date (simulated) and a short advisory like "Security updates pending: N CVE(s). See /var/log/cve_simulation.log".
+
+5) --- FILE: cowrie.cfg ---
+   - Realistic sections: [honeypot], [ssh], [shell], [output_jsonlog], [output_textlog].
+   - listen_endpoints on port local:68; include 1–2 commented alternate ports.
+   - userdb_file -> etc/userdb.txt; log files in var/log/cowrie.
+   - Add a couple admin comments/TODOs (typos acceptable). No private keys.
+
+6) --- FILE: etc/userdb.txt ---
+   - One bcrypt-like token per human user: format "user:$2y$10$<22-28 chars>"
+   - Tokens should vary in length/appearance.
+
+7) --- FILE: log/cowrie.log --- and --- FILE: log/auth.log ---
+   - Use RFC5737 attacker IPs: 192.0.2.x, 198.51.100.x, 203.0.113.x.
+   - Simulate a realistic attacker session:
+       * repeated failed logins from one IP (use different usernames from /etc/passwd)
+       * one successful login for a non-root user from another IP
+       * cowrie.session lines: executed commands (id; uname -a; ps aux; cat /proc/cpuinfo | head -n1; sudo -l)
+       * explicit session open/close lines (pam_unix session opened/closed)
+       * interleave kernel/syslog noise: "TCP: Possible SYN flooding", "BUG: unable to handle kernel NULL pointer dereference", "Connection reset by peer", "broken pipe"
+       * include ps/top snapshots that **use the exact process names** from the RUNNING PROCESSES snippet above (repeat worker entries with distinct PIDs)
+       * when attacker inspects services (e.g., `systemctl status ufw`), include output that references packages from the INSTALLED PACKAGES preview
+
+8) --- FILE: logs/cve_simulation.log ---
+   - One RFC-3339 timestamped line per CVE from the selected top list. Each line must be observational (no exploit) and mention the CVE ID, a short symptom, and any matched package/version found.
+
+EXTRA REALISM (encouraged)
+- Add a fabricated /proc/cpuinfo single-line: "model name : Intel(R) Xeon(R) CPU E5-2676 v3 @ 2.40GHz"
+- Add systemd/CRON noise: "Started Daily apt download activities", "CRON[1234]: pam_unix(cron:session): session opened for user root"
+- In cowrie.cfg, keep a commented legacy banner or alternate listen_endpoints line.
+
+NOW: produce **ONLY** the files requested above as file blocks with the described realism, and ensure that any vulnerability indicators are observational text only (no exploit/PoC).

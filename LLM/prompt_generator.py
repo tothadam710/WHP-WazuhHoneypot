@@ -1,7 +1,11 @@
 import random
+import re
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
+# ---------------------------
+# Helper: ps preview builder
+# ---------------------------
 def _format_ps_example(processes: Dict[str, int], cap_per_proc:int=4):
     """
     Build a short ps/top style preview (text block) from process counts.
@@ -12,21 +16,21 @@ def _format_ps_example(processes: Dict[str, int], cap_per_proc:int=4):
     # heuristic ordering: highest-count first
     for name, cnt in sorted(processes.items(), key=lambda x: -x[1])[:18]:
         display_name = name
-        # make nginx-like worker label if nginx appears
+        # nicer label if nginx present
         if "nginx" in name.lower():
             display_name = "nginx: worker process"
-        # sanitize long kernel names minimally
         display_name = display_name.replace(" ", "_")
         for i in range(min(cnt, cap_per_proc)):
             pid += random.randint(1,120)
-            # cpu/mem heuristics
-            if any(x in name.lower() for x in ("mysql","mysqld","java")):
+            # cpu/mem heuristics by process type
+            lname = name.lower()
+            if any(x in lname for x in ("mysql","mysqld","java")):
                 cpu = round(random.uniform(3.0, 20.0),1)
                 mem = round(random.uniform(3.0, 18.0),1)
             elif name.startswith("kworker") or name.startswith("khung") or name.startswith("kdev"):
                 cpu = round(random.uniform(0.0, 3.0),1)
                 mem = round(random.uniform(0.0, 1.0),1)
-            elif "unattended" in name.lower():
+            elif "unattended" in lname:
                 cpu = round(random.uniform(1.0, 8.0),1)
                 mem = round(random.uniform(0.2, 2.0),1)
             else:
@@ -35,6 +39,9 @@ def _format_ps_example(processes: Dict[str, int], cap_per_proc:int=4):
             lines.append(f"{pid:>5} {display_name:<28} {cpu:>5}% {mem:>5}%")
     return "\n    ".join(lines)
 
+# --------------------------------
+# Helper: package preview builder
+# --------------------------------
 def _format_package_preview(packages: Dict[str,int], max_show:int=12):
     """
     Build apt/dpkg-like preview lines referencing package names from inventory.
@@ -43,7 +50,7 @@ def _format_package_preview(packages: Dict[str,int], max_show:int=12):
     pk_lines = []
     items = list(packages.items())[:max_show] if packages else []
     for pkg, count in items:
-        # version is not present in your dict; show installed hint using count as pseudo-version hint
+        # We don't have version numbers in the dict; show installed hint using count as pseudo-version hint
         pk_lines.append(f"{pkg} installed (meta-count={count})")
     if items:
         broken_pkg = items[min(2, len(items)-1)][0]
@@ -51,38 +58,147 @@ def _format_package_preview(packages: Dict[str,int], max_show:int=12):
         pk_lines.append(f"apt: E: Sub-process /usr/bin/dpkg returned an error code (1) (simulated)")
     return "\n    ".join(pk_lines)
 
-def generate_cowrie_prompt_detailed(wazuh_data: Dict, sample_zip: Optional[str]=None) -> str:
+# --------------------------------
+# Small utilities
+# --------------------------------
+def _most_common_value(d: Dict[str,int], default: str = "unknown") -> str:
+    """Return the key with the highest count from a dict of {value: count}."""
+    if not d:
+        return default
+    return max(d.items(), key=lambda x: x[1])[0]
+
+def _top_n_keys(d: Dict[str,int], n:int=10) -> List[str]:
+    """Return the top-n keys by frequency (descending)."""
+    if not d:
+        return []
+    return [k for k, _ in sorted(d.items(), key=lambda x: -x[1])[:n]]
+
+# -------------------------------------------------------
+# CVE selection + package matching for "vulnerable look"
+# -------------------------------------------------------
+def _select_top_severe_cves(vulns: Dict, package_dict: Dict[str,int],
+                            severities: List[str]=["Critical","High"],
+                            top_n:int=5) -> List[Dict]:
     """
-    Produce a highly detailed prompt that embeds the exact package/process inventory
-    from the provided `wazuh_data` dict so the LLM output mimics a host with those
-    packages installed and those processes running.
+    From the vulnerabilities dict (JSON shape like your linux_profile.json),
+    pick top_n CVEs that have severity in 'severities' (priority: Critical then High).
+    Try to match package names referenced in the CVE example text against package_dict keys.
 
-    Returns a single prompt string ready to pass to an LLM. The LLM must output only
-    file blocks (see instructions inside).
+    Returns list of dicts:
+    {
+        "cve_id": str,
+        "count": int,
+        "severity": str,
+        "matched_packages": [pkg,...],
+        "example": { ... }  # chosen representative example object if present
+    }
     """
+    if not vulns:
+        return []
 
-    # Basic environment extraction with fallbacks
-    os_names = ", ".join(wazuh_data.get("os_names", {}).keys()) if wazuh_data.get("os_names") else "Ubuntu"
-    os_versions = ", ".join(wazuh_data.get("os_versions", {}).keys()) if wazuh_data.get("os_versions") else "16.04.7 LTS"
-    platforms = ", ".join(wazuh_data.get("os_platforms", {}).keys()) if wazuh_data.get("os_platforms") else "x86_64"
-    open_ports = ", ".join(wazuh_data.get("open_ports", {}).keys()) if wazuh_data.get("open_ports") else "22"
+    entries = []
+    for cve_id, meta in vulns.items():
+        count = meta.get("count", 0)
+        examples = meta.get("examples", []) or []
 
-    processes = wazuh_data.get("process_names", {}) or {}
-    packages = wazuh_data.get("package_names", {}) or {}
-    vulnerabilities = (wazuh_data.get("vulnerabilities") or {}).keys()
-    vuln_preview = ", ".join(list(vulnerabilities)[:8]) if vulnerabilities else "none"
+        # choose best example preferring wanted severities
+        chosen = None
+        chosen_sev = ""
+        for sev in severities:
+            for ex in examples:
+                if ex.get("severity","").lower() == sev.lower():
+                    chosen = ex
+                    chosen_sev = sev
+                    break
+            if chosen:
+                break
+        if not chosen and examples:
+            chosen = examples[0]
+            chosen_sev = chosen.get("severity","")
+        if not chosen:
+            chosen = {}
+            chosen_sev = ""
 
-    # Derive human-like usernames (if user list present else sensible defaults)
-    # prefer to keep consistent names if some passwd/userdb files exist in sample_zip (not handled here)
-    human_users = ["admin","deploy","git","ci-runner","ops","anna","peter","nora","kevin","maria"]
-    # If passwd in sample_zip we might extract real users; omitted for brevity.
+        # combine candidate text to search for package names
+        text = " ".join([str(chosen.get("condition","")), str(chosen.get("description",""))]).lower()
+        matched = []
+        for pkg in package_dict.keys():
+            # token boundary match to avoid partial matches
+            if re.search(r"\b" + re.escape(pkg.lower()) + r"\b", text):
+                matched.append(pkg)
 
-    # Build ps and package preview snippets inserted into the prompt (concrete examples)
-    ps_preview = _format_ps_example(processes)
-    pk_preview = _format_package_preview(packages)
+        entries.append({
+            "cve_id": cve_id,
+            "count": count,
+            "severity": chosen_sev,
+            "matched_packages": matched,
+            "example": chosen
+        })
 
+    # filter by severity preference
+    desired = [e for e in entries if e["severity"].lower() in [s.lower() for s in severities]]
+    if len(desired) < top_n:
+        # fallback to any severity if not enough matches
+        desired = entries
+
+    # sort by count desc and return top_n
+    desired_sorted = sorted(desired, key=lambda x: -x["count"])
+    return desired_sorted[:top_n]
+
+# -------------------------------------------------------
+# Main prompt generator
+# -------------------------------------------------------
+def generate_cowrie_prompt_detailed(wazuh_data: Dict, sample_zip: Optional[str]=None,
+                                   top_proc_n:int=18, top_pkg_n:int=12,
+                                   top_vuln_n:int=5) -> str:
+    """
+    Produce a detailed Cowrie honeypot generation prompt from aggregated JSON data.
+
+    - Dynamically chooses most common OS/Version/Platform/Port.
+    - Uses top N processes and top N packages for realistic previews.
+    - Selects top High/Critical CVEs and attempts to match them to packages,
+      then instructs the LLM to *simulate* vulnerability indicators (no exploits).
+    """
+    # --- dynamic OS/platform/port selection ---
+    os_name = _most_common_value(wazuh_data.get("os_names", {}), "Linux")
+    os_version = _most_common_value(wazuh_data.get("os_versions", {}), "unknown version")
+    os_platform = _most_common_value(wazuh_data.get("os_platforms", {}), "x86_64")
+    main_port = _most_common_value(wazuh_data.get("open_ports", {}), "22")
+
+    # --- top processes & packages ---
+    process_dict = wazuh_data.get("process_names", {}) or {}
+    package_dict = wazuh_data.get("package_names", {}) or {}
+
+    top_processes = _top_n_keys(process_dict, n=top_proc_n)
+    top_packages = _top_n_keys(package_dict, n=top_pkg_n)
+
+    selected_processes = {p: process_dict[p] for p in top_processes}
+    selected_packages = {p: package_dict[p] for p in top_packages}
+
+    # --- CVE selection & matching ---
+    vulns = wazuh_data.get("vulnerabilities", {}) or {}
+    top_vulns = _select_top_severe_cves(vulns, package_dict, severities=["Critical","High"], top_n=top_vuln_n)
+
+    # Build a compact human-readable summary of chosen CVEs for the prompt
+    vuln_summary_lines = []
+    for v in top_vulns:
+        ex = v.get("example", {}) or {}
+        cond = ex.get("condition","")
+        brief = cond if cond else ex.get("description","")
+        brief = (brief[:140] + "...") if len(brief) > 140 else brief
+        vuln_summary_lines.append(f"{v['cve_id']} ({v['severity']}) -> packages: {v['matched_packages'] or ['(no direct match)']} ; note: {brief}")
+
+    vuln_preview = ", ".join([v["cve_id"] for v in top_vulns]) if top_vulns else "none"
+
+    # --- previews for prompt ---
+    ps_preview = _format_ps_example(selected_processes)
+    pk_preview = _format_package_preview(selected_packages)
     now = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
+    # sample human usernames
+    human_users = ["admin","deploy","git","ci-runner","ops","anna","peter","nora","kevin","maria"]
+
+    # --- Construct prompt text (instructions to LLM) ---
     prompt = f"""
 You are a senior on-call Linux sysadmin and intrusion analyst. Generate a set of **highly realistic** Cowrie honeypot filesystem artifacts.
 **OUTPUT MUST BE ONLY file blocks**, in this exact format (nothing else):
@@ -90,29 +206,40 @@ You are a senior on-call Linux sysadmin and intrusion analyst. Generate a set of
 --- FILE: <relative/path/to/file> ---
 <file content>
 
-Use the exact inventory below to make the artifacts look like they came from a real Ubuntu 16.04 host. The generated files must reference these package names and must contain ps/top snapshots consistent with the running processes counts.
+Use the inventory below to make the artifacts look like they came from a real {os_name} {os_version} host ({os_platform} platform).
+The generated files must reference these package names and contain ps/top snapshots consistent with the running processes counts.
 
 ENVIRONMENT (use these values)
-- OS Names: {os_names}
-- OS Versions: {os_versions}
-- Platform: {platforms}
-- Open ports: {open_ports}
+- OS Name: {os_name}
+- OS Version: {os_version}
+- Platform: {os_platform}
+- Open port: {main_port}
 
-INSTALLED PACKAGES (use these package names in apt/dpkg-like outputs)
+INSTALLED PACKAGES (top {len(selected_packages)} most common)
     {pk_preview}
 
-RUNNING PROCESSES (ps/top style examples — reflect multiplicity, varied PIDs & usage)
+RUNNING PROCESSES (top {len(selected_processes)} most common — ps/top style examples)
     {ps_preview}
 
-NOTABLE CVEs (observational only; do not produce exploit code): {vuln_preview}
+NOTABLE CVEs (selected top severe CVEs from inventory — informational only): {vuln_preview}
+
+VULNERABILITY SIMULATION (IMPORTANT — NO EXPLOITS)
+- Based on the inventory, the following CVEs were identified as High/Critical and should be used to make the honeypot appear **deliberately vulnerable** (simulate only; DO NOT include exploit code or PoCs):
+{chr(10).join(['    - ' + l for l in vuln_summary_lines]) if vuln_summary_lines else '    - none selected'}
+
+For each listed CVE above, instruct the LLM to:
+  * Show a plausible older/vulnerable package version in package lists (e.g., "zlib1g 1.2.8.dfsg-2ubuntu4.3 installed (vulnerable)").
+  * In logs/cve_simulation.log add one RFC-3339 timestamped line describing an observed symptom (e.g., "gzip header parsing failed; connection reset").
+  * In dpkg -l / rpm -qa / or service status outputs show the affected package and a simulated "Pending security update" or "Fix available but not applied" note.
+  * Avoid any exploit, code snippet, PoC, shell commands to exploit the vulnerability, or private credentials — only textual observations and version strings.
 
 MANDATORY FORMAT & SAFETY RULES
 - DO NOT include working exploits, malware, or runnable payloads.
-- DO NOT include any real credentials or real private keys.
-- All hashes/tokens must be synthetic, random-looking strings (e.g. $6$... for /etc/shadow, $2y$... for userdb).
+- DO NOT include any real credentials, real private keys, or real secrets.
+- All hashes/tokens must be synthetic, random-looking strings.
 - Use RFC-3339 timestamps **without fractional seconds** (e.g. {now}).
 - Output ONLY file blocks; nothing outside them.
-- Keep files moderately sized (realistic, not enormous).
+- Keep files realistic but moderately sized.
 
 REQUIRED FILES (generate each as a file block)
 1) --- FILE: etc/passwd ---
@@ -128,12 +255,12 @@ REQUIRED FILES (generate each as a file block)
    - Choose a hostname consistent with services (e.g., web-01 or app-frontend if nginx/unattended-upgr present).
 
 4) --- FILE: etc/motd and etc/issue ---
-   - Ubuntu 16.04 style greeting including OS version and a "Last security update" date (simulated).
-   - Include 1–2 management/documentation URLs.
+   - Provide a distribution-style greeting that references {os_name} {os_version}.
+   - Include "Last security update" date (simulated) and a short advisory like "Security updates pending: N CVE(s). See /var/log/cve_simulation.log".
 
 5) --- FILE: cowrie.cfg ---
    - Realistic sections: [honeypot], [ssh], [shell], [output_jsonlog], [output_textlog].
-   - listen_endpoints on port 22; include 1–2 commented alternate ports.
+   - listen_endpoints on port {main_port}; include 1–2 commented alternate ports.
    - userdb_file -> etc/userdb.txt; log files in var/log/cowrie.
    - Add a couple admin comments/TODOs (typos acceptable). No private keys.
 
@@ -150,17 +277,17 @@ REQUIRED FILES (generate each as a file block)
        * explicit session open/close lines (pam_unix session opened/closed)
        * interleave kernel/syslog noise: "TCP: Possible SYN flooding", "BUG: unable to handle kernel NULL pointer dereference", "Connection reset by peer", "broken pipe"
        * include ps/top snapshots that **use the exact process names** from the RUNNING PROCESSES snippet above (repeat worker entries with distinct PIDs)
-       * when attacker inspects services (e.g., `systemctl status ufw`), include output that references the `ufw` package (or other packages listed)
+       * when attacker inspects services (e.g., `systemctl status ufw`), include output that references packages from the INSTALLED PACKAGES preview
 
 8) --- FILE: logs/cve_simulation.log ---
-   - One RFC-3339 timestamped line per CVE (use CVE IDs from input), each with a short observational symptom (no exploit code). Example format:
-       2025-09-23T21:18:58Z CVE-2022-37434 — gzip header parsing failed; connection reset
+   - One RFC-3339 timestamped line per CVE from the selected top list. Each line must be observational (no exploit) and mention the CVE ID, a short symptom, and any matched package/version found.
 
-EXTRA REALISM (strongly encouraged)
+EXTRA REALISM (encouraged)
 - Add a fabricated /proc/cpuinfo single-line: "model name : Intel(R) Xeon(R) CPU E5-2676 v3 @ 2.40GHz"
 - Add systemd/CRON noise: "Started Daily apt download activities", "CRON[1234]: pam_unix(cron:session): session opened for user root"
 - In cowrie.cfg, keep a commented legacy banner or alternate listen_endpoints line.
 
-NOW: produce **ONLY** the files requested above as file blocks with the described realism. Use the exact package/process names from the inventory when useful.
-"""
-    return prompt.strip()
+NOW: produce **ONLY** the files requested above as file blocks with the described realism, and ensure that any vulnerability indicators are observational text only (no exploit/PoC).
+""".strip()
+
+    return prompt

@@ -1,0 +1,353 @@
+{
+  "os_versions": {
+    "16.04.7 LTS (Xenial Xerus)": 1
+  },
+  "os_names": {
+    "Ubuntu": 1
+  },
+  "os_platforms": {
+    "ubuntu": 1
+  },
+  "open_ports": {
+    "local:68": 1
+  },
+  "process_names": {
+    "bioset": 12,
+    "systemd": 2,
+    "iscsid": 2,
+    "bash": 2,
+    "watchdog/0": 1,
+    "unattended-upgr": 1,
+    "login": 1,
+    "kdevtmpfs": 1,
+    "(sd-pam)": 1,
+    "netns": 1,
+    "kpsmoused": 1,
+    "sudo": 1,
+    "perf": 1,
+    "kworker/0:1H": 1,
+    "khungtaskd": 1
+  },
+  "package_names": {
+    "ufw": 2,
+    "unattended-upgrades": 2,
+    "command-not-found": 2,
+    "passwd": 1,
+    "python3-update-manager": 1,
+    "dmsetup": 1,
+    "libparted2": 1,
+    "libmpfr4": 1,
+    "python-debian": 1,
+    "zerofree": 1,
+    "libgdbm3": 1,
+    "initramfs-tools": 1,
+    "ubuntu-cloudimage-keyring": 1,
+    "friendly-recovery": 1,
+    "libgeoip1": 1
+  },
+  "vulnerabilities": {
+    "CVE-2017-11671": {
+      "count": 3,
+      "examples": [
+        {
+          "severity": "Medium",
+          "score": 4.0,
+          "version": "3.0",
+          "description": "Under certain circumstances, the ix86_expand_builtin function in i386.c inGNU Compiler Collection (GCC) version 4.6, 4.7, 4.8, 4.9, 5 before 5.5, and6 before 6.4 will generate instruction sequences that clobber the statusflag of the RDRAND and RDSEED intrinsics before it can be read, potentiallycausing failures of these instructions to go unreported. This couldpotentially lead to less randomness in random number generation.",
+          "published_at": "2017-07-26T21:29:00Z",
+          "condition": "Package less than 0:6.0.1-0ubuntu1+esm1",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2017-11671",
+          "category": "Packages"
+        },
+        {
+          "severity": "Medium",
+          "score": 4.0,
+          "version": "3.0",
+          "description": "Under certain circumstances, the ix86_expand_builtin function in i386.c inGNU Compiler Collection (GCC) version 4.6, 4.7, 4.8, 4.9, 5 before 5.5, and6 before 6.4 will generate instruction sequences that clobber the statusflag of the RDRAND and RDSEED intrinsics before it can be read, potentiallycausing failures of these instructions to go unreported. This couldpotentially lead to less randomness in random number generation.",
+          "published_at": "2017-07-26T21:29:00Z",
+          "condition": "Package less than 0:5.4.0-6ubuntu1~16.04.12+esm2",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2017-11671",
+          "category": "Packages"
+        },
+        {
+          "severity": "Medium",
+          "score": 4.0,
+          "version": "3.0",
+          "description": "Under certain circumstances, the ix86_expand_builtin function in i386.c inGNU Compiler Collection (GCC) version 4.6, 4.7, 4.8, 4.9, 5 before 5.5, and6 before 6.4 will generate instruction sequences that clobber the statusflag of the RDRAND and RDSEED intrinsics before it can be read, potentiallycausing failures of these instructions to go unreported. This couldpotentially lead to less randomness in random number generation.",
+          "published_at": "2017-07-26T21:29:00Z",
+          "condition": "Package less than 1:6.0.1-0ubuntu1+esm1",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2017-11671",
+          "category": "Packages"
+        }
+      ]
+    },
+    "CVE-2022-37434": {
+      "count": 3,
+      "examples": [
+        {
+          "severity": "Critical",
+          "score": 9.8,
+          "version": "3.1",
+          "description": "zlib through 1.2.12 has a heap-based buffer over-read or buffer overflow ininflate in inflate.c via a large gzip header extra field. NOTE: onlyapplications that call inflateGetHeader are affected. Some commonapplications bundle the affected zlib source code but may be unable to callinflateGetHeader (e.g., see the nodejs/node reference).",
+          "published_at": "2022-08-05T07:15:07Z",
+          "condition": "Package less than 0:3.1.1-3ubuntu1.3+esm2",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2022-37434",
+          "category": "Packages"
+        },
+        {
+          "severity": "Critical",
+          "score": 9.8,
+          "version": "3.1",
+          "description": "zlib through 1.2.12 has a heap-based buffer over-read or buffer overflow ininflate in inflate.c via a large gzip header extra field. NOTE: onlyapplications that call inflateGetHeader are affected. Some commonapplications bundle the affected zlib source code but may be unable to callinflateGetHeader (e.g., see the nodejs/node reference).",
+          "published_at": "2022-08-05T07:15:07Z",
+          "condition": "Package less than 1:1.2.8.dfsg-2ubuntu4.3+esm2",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2022-37434",
+          "category": "Packages"
+        },
+        {
+          "severity": "Critical",
+          "score": 9.8,
+          "version": "3.1",
+          "description": "zlib through 1.2.12 has a heap-based buffer over-read or buffer overflow ininflate in inflate.c via a large gzip header extra field. NOTE: onlyapplications that call inflateGetHeader are affected. Some commonapplications bundle the affected zlib source code but may be unable to callinflateGetHeader (e.g., see the nodejs/node reference).",
+          "published_at": "2022-08-05T07:15:07Z",
+          "condition": "Package less than 0:2.0.4-8ubuntu1.16.04.4+esm2",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2022-37434",
+          "category": "Packages"
+        }
+      ]
+    },
+    "CVE-2018-25032": {
+      "count": 3,
+      "examples": [
+        {
+          "severity": "High",
+          "score": 7.5,
+          "version": "3.1",
+          "description": "zlib before 1.2.12 allows memory corruption when deflating (i.e., whencompressing) if the input has many distant matches.",
+          "published_at": "2022-03-25T09:15:08Z",
+          "condition": "Package less than 0:3.1.1-3ubuntu1.3+esm1",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2018-25032",
+          "category": "Packages"
+        },
+        {
+          "severity": "High",
+          "score": 7.5,
+          "version": "3.1",
+          "description": "zlib before 1.2.12 allows memory corruption when deflating (i.e., whencompressing) if the input has many distant matches.",
+          "published_at": "2022-03-25T09:15:08Z",
+          "condition": "Package less than 1:1.2.8.dfsg-2ubuntu4.3+esm1",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2018-25032",
+          "category": "Packages"
+        },
+        {
+          "severity": "High",
+          "score": 7.5,
+          "version": "3.1",
+          "description": "zlib before 1.2.12 allows memory corruption when deflating (i.e., whencompressing) if the input has many distant matches.",
+          "published_at": "2022-03-25T09:15:08Z",
+          "condition": "Package less than 0:2.0.4-8ubuntu1.16.04.4+esm2",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2018-25032",
+          "category": "Packages"
+        }
+      ]
+    },
+    "CVE-2022-42898": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "High",
+          "score": 8.8,
+          "version": "3.1",
+          "description": "PAC parsing in MIT Kerberos 5 (aka krb5) before 1.19.4 and 1.20.x before1.20.1 has integer overflows that may lead to remote code execution (inKDC, kadmind, or a GSS or Kerberos application server) on 32-bit platforms(which have a resultant heap-based buffer overflow), and cause a denial ofservice on other platforms. This occurs in krb5_pac_parse inlib/krb5/krb/pac.c. Heimdal before 7.7.1 has \"a similar bug.\"",
+          "published_at": "2022-12-25T06:15:09Z",
+          "condition": "Package less than 0:1.7~git20150920+dfsg-4ubuntu1.16.04.1+esm3",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2022-42898",
+          "category": "Packages"
+        },
+        {
+          "severity": "High",
+          "score": 8.8,
+          "version": "3.1",
+          "description": "PAC parsing in MIT Kerberos 5 (aka krb5) before 1.19.4 and 1.20.x before1.20.1 has integer overflows that may lead to remote code execution (inKDC, kadmind, or a GSS or Kerberos application server) on 32-bit platforms(which have a resultant heap-based buffer overflow), and cause a denial ofservice on other platforms. This occurs in krb5_pac_parse inlib/krb5/krb/pac.c. Heimdal before 7.7.1 has \"a similar bug.\"",
+          "published_at": "2022-12-25T06:15:09Z",
+          "condition": "Package less than 0:1.13.2+dfsg-5ubuntu2.2+esm3",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2022-42898",
+          "category": "Packages"
+        }
+      ]
+    },
+    "CVE-2023-48795": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "Medium",
+          "score": 5.9,
+          "version": "3.1",
+          "description": "The SSH transport protocol with certain OpenSSH extensions, found inOpenSSH before 9.6 and other products, allows remote attackers to bypassintegrity checks such that some packets are omitted (from the extensionnegotiation message), and a client and server may consequently end up witha connection for which some security features have been downgraded ordisabled, aka a Terrapin attack. This occurs because the SSH Binary PacketProtocol (BPP), implemented by these extensions, mishandles the handshakephase and mishandles use of sequence numbers. For example, there is aneffective attack against SSH's use of ChaCha20-Poly1305 (and CBC withEncrypt-then-MAC). The bypass occurs in chacha20-poly1305@openssh.com and(if CBC is used) the -etm@openssh.com MAC algorithms. This also affectsMaverick Synergy Java SSH API before 3.1.0-SNAPSHOT, Dropbear through2022.83, Ssh before 5.1.1 in Erlang/OTP, PuTTY before 0.80, AsyncSSH before2.14.2, golang.org/x/crypto before 0.17.0, libssh before 0.10.6, libssh2through 1.11.0, Thorn Tech SFTP Gateway before 3.4.6, Tera Term before 5.1,Paramiko before 3.4.0, jsch before 0.2.15, SFTPGo before 2.5.6, NetgatepfSense Plus through 23.09.1, Netgate pfSense CE through 2.7.2, HPN-SSHthrough 18.2.0, ProFTPD before 1.3.8b (and before 1.3.9rc2), ORYXCycloneSSH before 2.3.4, NetSarang XShell 7 before Build 0144, CrushFTPbefore 10.6.0, ConnectBot SSH library before 2.2.22, Apache MINA sshdthrough 2.11.0, sshj through 0.37.0, TinySSH through 20230101, trilead-ssh26401, LANCOM LCOS and LANconfig, FileZilla before 3.66.4, Nova before 11.8,PKIX-SSH before 14.4, SecureCRT before 9.4.3, Transmit5 before 5.10.4,Win32-OpenSSH before 9.5.0.0p1-Beta, WinSCP before 6.2.2, Bitvise SSHServer before 9.32, Bitvise SSH Client before 9.33, KiTTY through0.76.1.13, the net-ssh gem 7.2.0 for Ruby, the mscdex ssh2 module before1.15.0 for Node.js, the thrussh library before 0.35.1 for Rust, and theRussh crate before 0.40.2 for Rust.",
+          "published_at": "2023-12-18T16:15:10Z",
+          "condition": "Package less than 0:2.0.11-0ubuntu1~16.04.4+esm1",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2023-48795",
+          "category": "Packages"
+        },
+        {
+          "severity": "Medium",
+          "score": 5.9,
+          "version": "3.1",
+          "description": "The SSH transport protocol with certain OpenSSH extensions, found inOpenSSH before 9.6 and other products, allows remote attackers to bypassintegrity checks such that some packets are omitted (from the extensionnegotiation message), and a client and server may consequently end up witha connection for which some security features have been downgraded ordisabled, aka a Terrapin attack. This occurs because the SSH Binary PacketProtocol (BPP), implemented by these extensions, mishandles the handshakephase and mishandles use of sequence numbers. For example, there is aneffective attack against SSH's use of ChaCha20-Poly1305 (and CBC withEncrypt-then-MAC). The bypass occurs in chacha20-poly1305@openssh.com and(if CBC is used) the -etm@openssh.com MAC algorithms. This also affectsMaverick Synergy Java SSH API before 3.1.0-SNAPSHOT, Dropbear through2022.83, Ssh before 5.1.1 in Erlang/OTP, PuTTY before 0.80, AsyncSSH before2.14.2, golang.org/x/crypto before 0.17.0, libssh before 0.10.6, libssh2through 1.11.0, Thorn Tech SFTP Gateway before 3.4.6, Tera Term before 5.1,Paramiko before 3.4.0, jsch before 0.2.15, SFTPGo before 2.5.6, NetgatepfSense Plus through 23.09.1, Netgate pfSense CE through 2.7.2, HPN-SSHthrough 18.2.0, ProFTPD before 1.3.8b (and before 1.3.9rc2), ORYXCycloneSSH before 2.3.4, NetSarang XShell 7 before Build 0144, CrushFTPbefore 10.6.0, ConnectBot SSH library before 2.2.22, Apache MINA sshdthrough 2.11.0, sshj through 0.37.0, TinySSH through 20230101, trilead-ssh26401, LANCOM LCOS and LANconfig, FileZilla before 3.66.4, Nova before 11.8,PKIX-SSH before 14.4, SecureCRT before 9.4.3, Transmit5 before 5.10.4,Win32-OpenSSH before 9.5.0.0p1-Beta, WinSCP before 6.2.2, Bitvise SSHServer before 9.32, Bitvise SSH Client before 9.33, KiTTY through0.76.1.13, the net-ssh gem 7.2.0 for Ruby, the mscdex ssh2 module before1.15.0 for Node.js, the thrussh library before 0.35.1 for Rust, and theRussh crate before 0.40.2 for Rust.",
+          "published_at": "2023-12-18T16:15:10Z",
+          "condition": "Package less than 1:7.2p2-4ubuntu2.10+esm5",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2023-48795",
+          "category": "Packages"
+        }
+      ]
+    },
+    "CVE-2023-50387": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "High",
+          "score": 7.5,
+          "version": "3.1",
+          "description": "Certain DNSSEC aspects of the DNS protocol (in RFC 4033, 4034, 4035, 6840,and related RFCs) allow remote attackers to cause a denial of service (CPUconsumption) via one or more DNSSEC responses, aka the \"KeyTrap\" issue. Oneof the concerns is that, when there is a zone with many DNSKEY and RRSIGrecords, the protocol specification implies that an algorithm must evaluateall combinations of DNSKEY and RRSIG records.",
+          "published_at": "2024-02-14T16:15:45Z",
+          "condition": "Package less than 1:9.10.3.dfsg.P4-8ubuntu1.19+esm8",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2023-50387",
+          "category": "Packages"
+        },
+        {
+          "severity": "High",
+          "score": 7.5,
+          "version": "3.1",
+          "description": "Certain DNSSEC aspects of the DNS protocol (in RFC 4033, 4034, 4035, 6840,and related RFCs) allow remote attackers to cause a denial of service (CPUconsumption) via one or more DNSSEC responses, aka the \"KeyTrap\" issue. Oneof the concerns is that, when there is a zone with many DNSKEY and RRSIGrecords, the protocol specification implies that an algorithm must evaluateall combinations of DNSKEY and RRSIG records.",
+          "published_at": "2024-02-14T16:15:45Z",
+          "condition": "Package less than 0:2.90-0ubuntu0.16.04.1+esm1",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2023-50387",
+          "category": "Packages"
+        }
+      ]
+    },
+    "CVE-2023-50868": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "High",
+          "score": 7.5,
+          "version": "3.1",
+          "description": "The Closest Encloser Proof aspect of the DNS protocol (in RFC 5155 when RFC9276 guidance is skipped) allows remote attackers to cause a denial ofservice (CPU consumption for SHA-1 computations) via DNSSEC responses in arandom subdomain attack, aka the \"NSEC3\" issue. The RFC 5155 specificationimplies that an algorithm must perform thousands of iterations of a hashfunction in certain situations.",
+          "published_at": "2024-02-14T16:15:45Z",
+          "condition": "Package less than 1:9.10.3.dfsg.P4-8ubuntu1.19+esm8",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2023-50868",
+          "category": "Packages"
+        },
+        {
+          "severity": "High",
+          "score": 7.5,
+          "version": "3.1",
+          "description": "The Closest Encloser Proof aspect of the DNS protocol (in RFC 5155 when RFC9276 guidance is skipped) allows remote attackers to cause a denial ofservice (CPU consumption for SHA-1 computations) via DNSSEC responses in arandom subdomain attack, aka the \"NSEC3\" issue. The RFC 5155 specificationimplies that an algorithm must perform thousands of iterations of a hashfunction in certain situations.",
+          "published_at": "2024-02-14T16:15:45Z",
+          "condition": "Package less than 0:2.90-0ubuntu0.16.04.1+esm1",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2023-50868",
+          "category": "Packages"
+        }
+      ]
+    },
+    "CVE-2016-5011": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "Medium",
+          "score": 4.6,
+          "version": "3.1",
+          "description": "The parse_dos_extended function in partitions/dos.c in the libblkid libraryin util-linux allows physically proximate attackers to cause a denial ofservice (memory consumption) via a crafted MSDOS partition table with anextended partition boot record at zero offset.",
+          "published_at": "2017-04-11T15:59:00Z",
+          "condition": "Package less than 0:2.27.1-6ubuntu3.10+esm2",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2016-5011",
+          "category": "Packages"
+        },
+        {
+          "severity": "Medium",
+          "score": 4.6,
+          "version": "3.1",
+          "description": "The parse_dos_extended function in partitions/dos.c in the libblkid libraryin util-linux allows physically proximate attackers to cause a denial ofservice (memory consumption) via a crafted MSDOS partition table with anextended partition boot record at zero offset.",
+          "published_at": "2017-04-11T15:59:00Z",
+          "condition": "Package less than 1:2.27.1-6ubuntu3.10+esm2",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2016-5011",
+          "category": "Packages"
+        }
+      ]
+    },
+    "CVE-2022-1271": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "High",
+          "score": 8.8,
+          "version": "3.1",
+          "description": "An arbitrary file write vulnerability was found in GNU gzip's zgreputility. When zgrep is applied on the attacker's chosen file name (forexample, a crafted file name), this can overwrite an attacker's content toan arbitrary attacker-selected file. This flaw occurs due to insufficientvalidation when processing filenames with two or more newlines whereselected content and the target file names are embedded in craftedmulti-line file names. This flaw allows a remote, low privileged attackerto force zgrep to write arbitrary files on the system.",
+          "published_at": "2022-08-31T16:15:09Z",
+          "condition": "Package less than 0:5.1.1alpha+20120614-2ubuntu2.16.04.1+esm1",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2022-1271",
+          "category": "Packages"
+        },
+        {
+          "severity": "High",
+          "score": 8.8,
+          "version": "3.1",
+          "description": "An arbitrary file write vulnerability was found in GNU gzip's zgreputility. When zgrep is applied on the attacker's chosen file name (forexample, a crafted file name), this can overwrite an attacker's content toan arbitrary attacker-selected file. This flaw occurs due to insufficientvalidation when processing filenames with two or more newlines whereselected content and the target file names are embedded in craftedmulti-line file names. This flaw allows a remote, low privileged attackerto force zgrep to write arbitrary files on the system.",
+          "published_at": "2022-08-31T16:15:09Z",
+          "condition": "Package less than 0:1.6-4ubuntu1+esm1",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2022-1271",
+          "category": "Packages"
+        }
+      ]
+    },
+    "CVE-2023-20593": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "Medium",
+          "score": 5.5,
+          "version": "3.1",
+          "description": "An issue in “Zen 2” CPUs, under specific microarchitectural circumstances,may allow an attacker to potentially access sensitive information.",
+          "published_at": "2023-07-24T20:15:10Z",
+          "condition": "Package less than 0:3.20191021.1+really3.20180524.1~ubuntu0.16.04.2+esm1",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2023-20593",
+          "category": "Packages"
+        },
+        {
+          "severity": "Medium",
+          "score": 5.5,
+          "version": "3.1",
+          "description": "An issue in “Zen 2” CPUs, under specific microarchitectural circumstances,may allow an attacker to potentially access sensitive information.",
+          "published_at": "2023-07-24T20:15:10Z",
+          "condition": "Package less than 0:4.4.0-248",
+          "source": "Canonical Security Tracker",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2023-20593",
+          "category": "Packages"
+        }
+      ]
+    }
+  }
+}

@@ -24,11 +24,7 @@ if __name__=="__main__":
     aggregate_os_specific("resources/windows_agents.json", "resources/windows_profile.json")
     aggregate_os_specific("resources/linux_agents.json", "resources/linux_profile.json")
 
-    # Példa használat:
-# with open("wazuh_data.json") as f:
-#     data = json.load(f)
-# prompt = generate_cowrie_prompt_detailed(data)
-# print(prompt)
+
     with open("resources/linux_profile.json") as f:
         linux_data = json.load(f)
     

@@ -1,0 +1,345 @@
+{
+  "os_versions": {
+    "10.0.19044.1288": 1,
+    "6.3.9600": 1
+  },
+  "os_names": {
+    "Microsoft Windows 10 Enterprise LTSC 2021": 1,
+    "Microsoft Windows Server 2012 R2 Standard Evaluation": 1
+  },
+  "os_platforms": {},
+  "hotfixes": {
+    "KB2468871": 2,
+    "KB2478063": 2,
+    "KB2533523": 2,
+    "KB2544514": 2,
+    "KB2600211": 2,
+    "KB2600217": 2,
+    "KB5003791": 1,
+    "KB5004331": 1,
+    "KB5005699": 1,
+    "KB5006670": 1,
+    "KB5026037": 1,
+    "KB2919355": 1,
+    "KB2919442": 1,
+    "KB2932046": 1,
+    "KB2937220": 1
+  },
+  "open_ports": {
+    "local:135": 4,
+    "local:445": 4,
+    "local:1900": 4,
+    "local:5355": 4,
+    "local:49667": 2,
+    "local:139": 2,
+    "local:49666": 2,
+    "local:138": 2,
+    "local:49668": 2,
+    "local:3702": 2,
+    "local:49665": 2,
+    "local:49669": 2,
+    "local:137": 2,
+    "local:5357": 2,
+    "local:49664": 2,
+    "local:5353": 2,
+    "local:49154": 2,
+    "local:49155": 2,
+    "local:5985": 2,
+    "local:49156": 2
+  },
+  "process_names": {
+    "svchost.exe": 68,
+    "WmiPrvSE.exe": 5,
+    "conhost.exe": 4,
+    "wazuh-agent.exe": 3,
+    "RuntimeBroker.exe": 3,
+    "net.exe": 3,
+    "spoolsv.exe": 2,
+    "VBoxService.exe": 2,
+    "explorer.exe": 2,
+    "VBoxTray.exe": 2,
+    "mmc.exe": 2,
+    "powershell.exe": 2,
+    "winlogon.exe": 2,
+    "lsass.exe": 2,
+    "fontdrvhost.exe": 2
+  },
+  "package_names": {
+    "Oracle VirtualBox Guest Additions 7.2.0": 2,
+    "Wazuh Agent": 2,
+    "A Microsoft Edge WebView2 futtatókörnyezete": 1,
+    "Microsoft Edge": 1
+  },
+  "vulnerabilities": {
+    "CVE-2025-55234": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "High",
+          "score": 8.8,
+          "version": "3.1",
+          "description": "SMB Server might be susceptible to relay attacks depending on the configuration. An attacker who successfully exploited these vulnerabilities could perform relay attacks and make the users subject to elevation of privilege attacks.\nThe SMB Server already supports mechanisms for hardening against relay attacks:\n\nSMB Server signing\nSMB Server Extended Protection for Authentication (EPA)\n\nMicrosoft is releasing this CVE to provide customers with audit capabilities to help them to assess their environment and to identify any potential device or software incompatibility issues before deploying SMB Server hardening measures that protect against relay attacks.\nIf you have not already enabled SMB Server hardening measures, we advise customers to take the following actions to be protected from these relay attacks:\n\nAssess your environment by utilizing the audit capabilities that we are exposing in the September 2025 security updates.  See Support for Audit Events to deploy SMB Server Hardening—SMB Server Signing &amp; SMB Server EPA.\nAdopt appropriate SMB Server hardening measures.",
+          "published_at": "2025-09-09T17:16:06Z",
+          "condition": "Package less than 10.0.19044.6332",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-55234",
+          "category": "OS"
+        },
+        {
+          "severity": "High",
+          "score": 8.8,
+          "version": "3.1",
+          "description": "SMB Server might be susceptible to relay attacks depending on the configuration. An attacker who successfully exploited these vulnerabilities could perform relay attacks and make the users subject to elevation of privilege attacks.\nThe SMB Server already supports mechanisms for hardening against relay attacks:\n\nSMB Server signing\nSMB Server Extended Protection for Authentication (EPA)\n\nMicrosoft is releasing this CVE to provide customers with audit capabilities to help them to assess their environment and to identify any potential device or software incompatibility issues before deploying SMB Server hardening measures that protect against relay attacks.\nIf you have not already enabled SMB Server hardening measures, we advise customers to take the following actions to be protected from these relay attacks:\n\nAssess your environment by utilizing the audit capabilities that we are exposing in the September 2025 security updates.  See Support for Audit Events to deploy SMB Server Hardening—SMB Server Signing &amp; SMB Server EPA.\nAdopt appropriate SMB Server hardening measures.",
+          "published_at": "2025-09-09T17:16:06Z",
+          "condition": "Package equal to 6.3.9600",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-55234",
+          "category": "OS"
+        }
+      ]
+    },
+    "CVE-2025-55226": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "Medium",
+          "score": 6.7,
+          "version": "3.1",
+          "description": "Concurrent execution using shared resource with improper synchronization ('race condition') in Graphics Kernel allows an authorized attacker to execute code locally.",
+          "published_at": "2025-09-09T17:16:05Z",
+          "condition": "Package less than 10.0.19044.6332",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-55226",
+          "category": "OS"
+        },
+        {
+          "severity": "Medium",
+          "score": 6.7,
+          "version": "3.1",
+          "description": "Concurrent execution using shared resource with improper synchronization ('race condition') in Graphics Kernel allows an authorized attacker to execute code locally.",
+          "published_at": "2025-09-09T17:16:05Z",
+          "condition": "Package equal to 6.3.9600",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-55226",
+          "category": "OS"
+        }
+      ]
+    },
+    "CVE-2025-54915": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "Medium",
+          "score": 6.7,
+          "version": "3.1",
+          "description": "Access of resource using incompatible type ('type confusion') in Windows Defender Firewall Service allows an authorized attacker to elevate privileges locally.",
+          "published_at": "2025-09-09T17:16:03Z",
+          "condition": "Package less than 10.0.19044.6332",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54915",
+          "category": "OS"
+        },
+        {
+          "severity": "Medium",
+          "score": 6.7,
+          "version": "3.1",
+          "description": "Access of resource using incompatible type ('type confusion') in Windows Defender Firewall Service allows an authorized attacker to elevate privileges locally.",
+          "published_at": "2025-09-09T17:16:03Z",
+          "condition": "Package equal to 6.3.9600",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54915",
+          "category": "OS"
+        }
+      ]
+    },
+    "CVE-2025-54912": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "High",
+          "score": 7.8,
+          "version": "3.1",
+          "description": "Use after free in Windows BitLocker allows an authorized attacker to elevate privileges locally.",
+          "published_at": "2025-09-09T17:16:03Z",
+          "condition": "Package less than 10.0.19044.6332",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54912",
+          "category": "OS"
+        },
+        {
+          "severity": "High",
+          "score": 7.8,
+          "version": "3.1",
+          "description": "Use after free in Windows BitLocker allows an authorized attacker to elevate privileges locally.",
+          "published_at": "2025-09-09T17:16:03Z",
+          "condition": "Package equal to 6.3.9600",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54912",
+          "category": "OS"
+        }
+      ]
+    },
+    "CVE-2025-54110": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "High",
+          "score": 8.8,
+          "version": "3.1",
+          "description": "Integer overflow or wraparound in Windows Kernel allows an authorized attacker to elevate privileges locally.",
+          "published_at": "2025-09-09T17:15:56Z",
+          "condition": "Package less than 10.0.19044.6332",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54110",
+          "category": "OS"
+        },
+        {
+          "severity": "High",
+          "score": 8.8,
+          "version": "3.1",
+          "description": "Integer overflow or wraparound in Windows Kernel allows an authorized attacker to elevate privileges locally.",
+          "published_at": "2025-09-09T17:15:56Z",
+          "condition": "Package equal to 6.3.9600",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54110",
+          "category": "OS"
+        }
+      ]
+    },
+    "CVE-2025-54109": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "Medium",
+          "score": 6.7,
+          "version": "3.1",
+          "description": "Access of resource using incompatible type ('type confusion') in Windows Defender Firewall Service allows an authorized attacker to elevate privileges locally.",
+          "published_at": "2025-09-09T17:15:56Z",
+          "condition": "Package less than 10.0.19044.6332",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54109",
+          "category": "OS"
+        },
+        {
+          "severity": "Medium",
+          "score": 6.7,
+          "version": "3.1",
+          "description": "Access of resource using incompatible type ('type confusion') in Windows Defender Firewall Service allows an authorized attacker to elevate privileges locally.",
+          "published_at": "2025-09-09T17:15:56Z",
+          "condition": "Package equal to 6.3.9600",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54109",
+          "category": "OS"
+        }
+      ]
+    },
+    "CVE-2025-54107": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "Medium",
+          "score": 4.3,
+          "version": "3.1",
+          "description": "Improper resolution of path equivalence in Windows MapUrlToZone allows an unauthorized attacker to bypass a security feature over a network.",
+          "published_at": "2025-09-09T17:15:55Z",
+          "condition": "Package less than 10.0.19044.6332",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54107",
+          "category": "OS"
+        },
+        {
+          "severity": "Medium",
+          "score": 4.3,
+          "version": "3.1",
+          "description": "Improper resolution of path equivalence in Windows MapUrlToZone allows an unauthorized attacker to bypass a security feature over a network.",
+          "published_at": "2025-09-09T17:15:55Z",
+          "condition": "Package equal to 6.3.9600",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54107",
+          "category": "OS"
+        }
+      ]
+    },
+    "CVE-2025-54104": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "Medium",
+          "score": 6.7,
+          "version": "3.1",
+          "description": "Access of resource using incompatible type ('type confusion') in Windows Defender Firewall Service allows an authorized attacker to elevate privileges locally.",
+          "published_at": "2025-09-09T17:15:55Z",
+          "condition": "Package less than 10.0.19044.6332",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54104",
+          "category": "OS"
+        },
+        {
+          "severity": "Medium",
+          "score": 6.7,
+          "version": "3.1",
+          "description": "Access of resource using incompatible type ('type confusion') in Windows Defender Firewall Service allows an authorized attacker to elevate privileges locally.",
+          "published_at": "2025-09-09T17:15:55Z",
+          "condition": "Package equal to 6.3.9600",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54104",
+          "category": "OS"
+        }
+      ]
+    },
+    "CVE-2025-54101": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "Medium",
+          "score": 4.8,
+          "version": "3.1",
+          "description": "Use after free in Windows SMBv3 Client allows an authorized attacker to execute code over a network.",
+          "published_at": "2025-09-09T17:15:54Z",
+          "condition": "Package less than 10.0.19044.6332",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54101",
+          "category": "OS"
+        },
+        {
+          "severity": "Medium",
+          "score": 4.8,
+          "version": "3.1",
+          "description": "Use after free in Windows SMBv3 Client allows an authorized attacker to execute code over a network.",
+          "published_at": "2025-09-09T17:15:54Z",
+          "condition": "Package equal to 6.3.9600",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54101",
+          "category": "OS"
+        }
+      ]
+    },
+    "CVE-2025-54098": {
+      "count": 2,
+      "examples": [
+        {
+          "severity": "High",
+          "score": 7.8,
+          "version": "3.1",
+          "description": "Improper access control in Windows Hyper-V allows an authorized attacker to elevate privileges locally.",
+          "published_at": "2025-09-09T17:15:54Z",
+          "condition": "Package less than 10.0.19044.6332",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54098",
+          "category": "OS"
+        },
+        {
+          "severity": "High",
+          "score": 7.8,
+          "version": "3.1",
+          "description": "Improper access control in Windows Hyper-V allows an authorized attacker to elevate privileges locally.",
+          "published_at": "2025-09-09T17:15:54Z",
+          "condition": "Package equal to 6.3.9600",
+          "source": "National Vulnerability Database",
+          "reference": "https://cti.wazuh.com/vulnerabilities/cves/CVE-2025-54098",
+          "category": "OS"
+        }
+      ]
+    }
+  }
+}
