@@ -270,6 +270,8 @@ REQUIRED FILES (generate each as a file block)
 
 7) --- FILE: log/cowrie.log --- and --- FILE: log/auth.log ---
    - Use RFC5737 attacker IPs: 192.0.2.x, 198.51.100.x, 203.0.113.x.
+   - ***CRITICAL (must match exactly):*** the SSH listener line MUST BE exactly:
+         listen_endpoints = tcp:2222:interface=0.0.0.0
    - Simulate a realistic attacker session:
        * repeated failed logins from one IP (use different usernames from /etc/passwd)
        * one successful login for a non-root user from another IP
@@ -288,6 +290,110 @@ EXTRA REALISM (encouraged)
 - In cowrie.cfg, keep a commented legacy banner or alternate listen_endpoints line.
 
 NOW: produce **ONLY** the files requested above as file blocks with the described realism, and ensure that any vulnerability indicators are observational text only (no exploit/PoC).
+
+DEPLOYABILITY REQUIREMENT
+-------------------------
+- Ensure cowrie.cfg is syntactically valid for Cowrie >= 2.5.
+- Use non-privileged port 2222 (not 22) in listen_endpoints.
+- Use local relative paths for log_path=log and userdb_file=etc/userdb.txt.
+- Point filesystem to share/cowrie/fs.pickle.
+- The resulting folder must be runnable immediately with:
+      bin/cowrie start
+  (assuming cowrie-venv and default directory layout).
+
+USERDB FILE FORMAT (IMPORTANT)
+------------------------------
+- etc/userdb.txt must contain only **plain-text credentials** in the format:
+      username:password
+  Example:
+      root:root
+      admin:admin
+      pi:raspberry
+      ubuntu:ubuntu
+- DO NOT use bcrypt, SHA, or hashed tokens — Cowrie's UserDB expects plain text.
+- Include at least 3–5 common default credentials.
+
+OTHER NOTES
+------------
+- No absolute paths or systemd service files should be generated.
+- Keep file layout consistent with standard Cowrie install tree.
+
 """.strip()
 
+    return prompt
+
+
+def generate_windows_prompt_from_profile(windows_profile: dict, top_procs:int=12, top_vulns:int=8) -> str:
+    """
+    Build a detailed prompt for generating Windows honeypot artifacts based on an aggregated profile JSON.
+    Input: windows_profile (loaded from windows_profile.json)
+    Output: a single string prompt to send to your LLM. The LLM MUST output ONLY file-blocks:
+      --- FILE: <path> ---
+      <content>
+    """
+    # Extract useful bits with safe defaults
+    os_examples = []
+    if isinstance(windows_profile.get("os_names"), dict):
+        os_examples = list(windows_profile["os_names"].keys())[:3]
+    os_ver_examples = list(windows_profile.get("os_versions", {}).keys())[:3]
+    hotfixes = list(windows_profile.get("hotfixes", {}).keys())[:10]
+    open_ports = list(windows_profile.get("open_ports", {}).keys())[:12]
+    proc_map = windows_profile.get("process_names", {})
+    top_procs_list = []
+    if isinstance(proc_map, dict):
+        # sort by count desc
+        sorted_procs = sorted(proc_map.items(), key=lambda kv: kv[1], reverse=True)
+        for name, cnt in sorted_procs[:top_procs]:
+            top_procs_list.append(f"{name}  (observed: {cnt})")
+    package_list = list(windows_profile.get("package_names", {}).keys())[:8]
+
+    # vulnerabilities: collect top_n CVE ids + short desc snippet
+    vuln_map = windows_profile.get("vulnerabilities", {})
+    vuln_preview = []
+    if isinstance(vuln_map, dict):
+        for cve, data in list(vuln_map.items())[:top_vulns]:
+            examples = data.get("examples", [])
+            desc = ""
+            published = ""
+            condition = ""
+            if examples:
+                ex = examples[0]
+                desc = (ex.get("description","") or "")[:200].replace("\n"," ")
+                published = ex.get("published_at","")
+                condition = ex.get("condition","")
+            vuln_preview.append(f"{cve} | {data.get('count',0)} occurrences | {desc} | cond:{condition} | pub:{published}")
+
+    # Build prompt string
+    prompt = f"""
+You are a senior Windows systems engineer and threat-hunter. Produce ONLY file-blocks in this exact format (no extra text):
+--- FILE: <absolute-or-relative-path> ---
+<file content>
+
+Use the following aggregated telemetry as guidance (do not invent conflicting facts; prefer these values when realistic):
+- OS examples: {', '.join(os_examples) or 'Microsoft Windows 10 Enterprise LTSC 2021'}
+- OS versions observed: {', '.join(os_ver_examples) or '10.0.19044.1288'}
+- Installed package examples: {', '.join(package_list) or 'Wazuh Agent, Oracle VirtualBox Guest Additions, Microsoft Edge'}
+- Hotfixes observed: {', '.join(hotfixes) if hotfixes else 'KB5003791, KB5004331'}
+- Open/listening ports (sample): {', '.join(open_ports) if open_ports else 'local:135, local:445, local:1900'}
+- Common processes (sample): {"; ".join(top_procs_list) if top_procs_list else 'svchost.exe, WmiPrvSE.exe, conhost.exe, wazuh-agent.exe'}
+- Top vulnerabilities (examples): 
+{"\\n".join(vuln_preview) if vuln_preview else 'CVE-2025-55234, CVE-2025-55226, ...'}
+
+REQUIREMENTS (MUST follow):
+1) Output MUST be only file-blocks (--- FILE: ... ---), nothing else — this is what your save_files_from_response() expects.
+2) Do NOT include runnable exploit code or real credentials/passwords. Any credentials must be obviously synthetic.
+3) Use RFC-3339 timestamps (e.g., 2025-10-07T12:34:56Z) for log lines.
+4) Generate at minimum these file blocks:
+   - C:/Windows/System32/drivers/etc/hosts            (realistic hosts lines)
+   - C:/Windows/Temp/vuln_simulation.log               (one timestamped line per CVE from telemetry)
+   - C:/Windows/Logs/tasklist.txt                      (tasklist snapshot consistent with process list)
+   - C:/ProgramData/InstalledPrograms.txt              (Programs & Features style list from package_names)
+   - C:/Windows/RegistryExport/HKLM_software.reg       (small .reg snippet listing synthetic InstallDate and DisplayVersion entries)
+   - C:/Users/Administrator/Desktop/notes.txt          (human admin notes, last investigated items; no secrets)
+5) For vuln_simulation.log:
+   - For each CVE use the CVE ID from the profile, include short symptom (derived from the example description), the impacted component (make a plausible mapping: e.g., SMB, Graphics Kernel, Defender Firewall, BitLocker, Kernel, Hyper-V), and a status like "Fix available but not applied" or "Pending security update".
+6) Keep generated files moderate in size (few KB each), and respect Windows path separators.
+
+Produce only file-blocks. NOTHING else.
+"""
     return prompt
