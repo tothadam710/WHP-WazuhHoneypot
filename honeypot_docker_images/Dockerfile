@@ -36,8 +36,8 @@ RUN pip install --upgrade pip setuptools wheel && \
     pip install -e .
 
 # ---- Copy your configuration ZIP ----
-COPY artifacts/cowrie_linux_output.zip /tmp/cowrie_linux_output.zip
-RUN unzip -o /tmp/cowrie_linux_output.zip -d /opt/cowrie && rm /tmp/cowrie_linux_output.zip
+#COPY artifacts/cowrie_linux_output.zip /tmp/cowrie_linux_output.zip
+#RUN unzip -o /tmp/cowrie_linux_output.zip -d /opt/cowrie && rm /tmp/cowrie_linux_output.zip
 
 # ---- Permissions ----
 RUN mkdir -p /opt/cowrie/log && chown -R cowrie:cowrie /opt/cowrie

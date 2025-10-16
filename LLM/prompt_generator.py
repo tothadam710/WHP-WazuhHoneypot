@@ -323,77 +323,90 @@ OTHER NOTES
     return prompt
 
 
-def generate_windows_prompt_from_profile(windows_profile: dict, top_procs:int=12, top_vulns:int=8) -> str:
+def generate_windows_prompt_from_profile(windows_profile: dict) -> str:
     """
-    Build a detailed prompt for generating Windows honeypot artifacts based on an aggregated profile JSON.
-    Input: windows_profile (loaded from windows_profile.json)
-    Output: a single string prompt to send to your LLM. The LLM MUST output ONLY file-blocks:
-      --- FILE: <path> ---
-      <content>
+    Generál egy OpenCanary-konfigurációs promptot a windows_profile.json alapján.
+    Visszaad egy stringet, amit az LLM-nek adunk; a LLM-nek egyetlen fájlblokkot kell
+    visszaadnia: --- FILE: opencanary.conf --- <JSON>.
+
+    Fontos: a prompt kifejezetten tiltja a 'honeypot', 'canary', 'trap', 'deception' és
+    hasonló kifejezések használatát a kimenetben, és kéri a reális Windows-szerver kinézetet.
     """
-    # Extract useful bits with safe defaults
-    os_examples = []
-    if isinstance(windows_profile.get("os_names"), dict):
-        os_examples = list(windows_profile["os_names"].keys())[:3]
-    os_ver_examples = list(windows_profile.get("os_versions", {}).keys())[:3]
-    hotfixes = list(windows_profile.get("hotfixes", {}).keys())[:10]
-    open_ports = list(windows_profile.get("open_ports", {}).keys())[:12]
-    proc_map = windows_profile.get("process_names", {})
-    top_procs_list = []
-    if isinstance(proc_map, dict):
-        # sort by count desc
-        sorted_procs = sorted(proc_map.items(), key=lambda kv: kv[1], reverse=True)
-        for name, cnt in sorted_procs[:top_procs]:
-            top_procs_list.append(f"{name}  (observed: {cnt})")
-    package_list = list(windows_profile.get("package_names", {}).keys())[:8]
+    # --- Basic data extraction from JSON (based on profile) ---
+    hostname = windows_profile.get("hostname", "").strip() or "fileserver-01"
+    domain = windows_profile.get("domain", "").strip() or "corp.local"
+    interfaces = windows_profile.get("interfaces", ["eth0"])
+    os_names = ", ".join(list(windows_profile.get("os_names", {}).keys())[:3]) or "Microsoft Windows Server 2022"
+    os_versions = ", ".join(list(windows_profile.get("os_versions", {}).keys())[:3]) or "10.0.19045"
+    open_ports = ", ".join(list(windows_profile.get("open_ports", {}).keys())[:6]) or "21, 80, 2222, 445, 3389"
+    process_list = ", ".join(list(windows_profile.get("process_names", {}).keys())[:10]) or "svchost.exe, conhost.exe, powershell.exe"
+    packages = ", ".join(list(windows_profile.get("package_names", {}).keys())[:10]) or "Microsoft Defender, IIS, PowerShell"
+    services = list(windows_profile.get("services", {}).keys()) if isinstance(windows_profile.get("services"), dict) else []
+    service_summary = ", ".join(services) if services else "smb, http, ftp, ssh, rdp"
+    log_path = windows_profile.get("log_path", "/var/log/opencanary/opencanary.log")
 
-    # vulnerabilities: collect top_n CVE ids + short desc snippet
-    vuln_map = windows_profile.get("vulnerabilities", {})
-    vuln_preview = []
-    if isinstance(vuln_map, dict):
-        for cve, data in list(vuln_map.items())[:top_vulns]:
-            examples = data.get("examples", [])
-            desc = ""
-            published = ""
-            condition = ""
-            if examples:
-                ex = examples[0]
-                desc = (ex.get("description","") or "")[:200].replace("\n"," ")
-                published = ex.get("published_at","")
-                condition = ex.get("condition","")
-            vuln_preview.append(f"{cve} | {data.get('count',0)} occurrences | {desc} | cond:{condition} | pub:{published}")
+    # Vulnerability preview (informational only)
+    vuln_map = windows_profile.get("vulnerabilities", {}) or {}
+    vuln_preview_list = []
+    for cve, meta in list(vuln_map.items())[:5]:
+        snippet = ""
+        if isinstance(meta, dict) and meta.get("examples"):
+            ex = meta["examples"][0]
+            snippet = (ex.get("description","") or ex.get("condition",""))[:140].replace("\n"," ")
+        vuln_preview_list.append(f"{cve} ({meta.get('count',0)}) - {snippet}")
+    vuln_preview = "\n    ".join(vuln_preview_list) if vuln_preview_list else "None detected."
 
-    # Build prompt string
+    # --- Prompt text ---
     prompt = f"""
-You are a senior Windows systems engineer and threat-hunter. Produce ONLY file-blocks in this exact format (no extra text):
---- FILE: <absolute-or-relative-path> ---
-<file content>
+You are an experienced Windows systems engineer responsible for producing a realistic, deployable OpenCanary configuration.
+OUTPUT RULE: produce **ONLY** a single file block in this exact format (no extra text, no explanations):
 
-Use the following aggregated telemetry as guidance (do not invent conflicting facts; prefer these values when realistic):
-- OS examples: {', '.join(os_examples) or 'Microsoft Windows 10 Enterprise LTSC 2021'}
-- OS versions observed: {', '.join(os_ver_examples) or '10.0.19044.1288'}
-- Installed package examples: {', '.join(package_list) or 'Wazuh Agent, Oracle VirtualBox Guest Additions, Microsoft Edge'}
-- Hotfixes observed: {', '.join(hotfixes) if hotfixes else 'KB5003791, KB5004331'}
-- Open/listening ports (sample): {', '.join(open_ports) if open_ports else 'local:135, local:445, local:1900'}
-- Common processes (sample): {"; ".join(top_procs_list) if top_procs_list else 'svchost.exe, WmiPrvSE.exe, conhost.exe, wazuh-agent.exe'}
-- Top vulnerabilities (examples): 
-{"\\n".join(vuln_preview) if vuln_preview else 'CVE-2025-55234, CVE-2025-55226, ...'}
+--- FILE: opencanary.conf ---
+{{ ... JSON object ... }}
 
-REQUIREMENTS (MUST follow):
-1) Output MUST be only file-blocks (--- FILE: ... ---), nothing else — this is what your save_files_from_response() expects.
-2) Do NOT include runnable exploit code or real credentials/passwords. Any credentials must be obviously synthetic.
-3) Use RFC-3339 timestamps (e.g., 2025-10-07T12:34:56Z) for log lines.
-4) Generate at minimum these file blocks:
-   - C:/Windows/System32/drivers/etc/hosts            (realistic hosts lines)
-   - C:/Windows/Temp/vuln_simulation.log               (one timestamped line per CVE from telemetry)
-   - C:/Windows/Logs/tasklist.txt                      (tasklist snapshot consistent with process list)
-   - C:/ProgramData/InstalledPrograms.txt              (Programs & Features style list from package_names)
-   - C:/Windows/RegistryExport/HKLM_software.reg       (small .reg snippet listing synthetic InstallDate and DisplayVersion entries)
-   - C:/Users/Administrator/Desktop/notes.txt          (human admin notes, last investigated items; no secrets)
-5) For vuln_simulation.log:
-   - For each CVE use the CVE ID from the profile, include short symptom (derived from the example description), the impacted component (make a plausible mapping: e.g., SMB, Graphics Kernel, Defender Firewall, BitLocker, Kernel, Hyper-V), and a status like "Fix available but not applied" or "Pending security update".
-6) Keep generated files moderate in size (few KB each), and respect Windows path separators.
+Telemetry (derive values from these — prefer the observed values, do not invent conflicting facts):
+- Hostname (preferred): {hostname}
+- Domain (preferred): {domain}
+- Interfaces: {', '.join(interfaces)}
+- OS families observed: {os_names}
+- OS versions observed: {os_versions}
+- Typical open ports (sample): {open_ports}
+- Typical processes: {process_list}
+- Installed packages (examples): {packages}
+- Observed services: {service_summary}
+- Log path suggestion: {log_path}
+- Top vulnerabilities (informational): 
+    {vuln_preview}
 
-Produce only file-blocks. NOTHING else.
+REQUIREMENTS (MUST BE FOLLOWED):
+1) Output ONLY the single file block: --- FILE: opencanary.conf --- followed immediately by a valid JSON object (no Markdown, no commentary, no extra file blocks).
+2) **Do NOT use or output** any of these strings anywhere in the JSON or in any values: "honeypot", "canary", "trap", "deception", "fake". Replace them with neutral terms if present.
+3) The JSON must be a syntactically valid OpenCanary configuration suitable for deployment (OpenCanary >= 0.7). Prefer Windows-like defaults and banners.
+4) Use Linux-compatible log path: "/var/log/opencanary/opencanary.log".
+5) Include these required top-level keys: "device.node_id", "device.hostname", "device.domain", "network.interfaces", "logging", "logger", "alerters".
+6) Enable realistic Windows services based on telemetry (set true/false as observed): ftp, http, ssh, smb, rdp. Include plausible ports and banners (examples: "Microsoft-IIS/10.0", "Microsoft FTP Service", "SSH-2.0-OpenSSH_for_Windows_8.1", "Microsoft SMB Server 10.0.19045").
+7) Include an "smb.config_path" set to "/etc/opencanary/smb.json" and set "smb.enabled" appropriately if SMB observed.
+8) Provide an "alerters" list containing at least:
+   - EmailAlerter with realistic but placeholder credentials (use "<REPLACE_WITH_SECRET>" for any secret),
+   - ConsoleAlerter.
+   Ensure email subject is neutral (e.g., "[Alert] <hostname>").
+9) Ports: prefer non-privileged SSH port 2222 (if profile explicitly indicates 22 and you must match, use profile value; otherwise use 2222).
+10) Do NOT include any fields that explicitly tag this node as a honeytrap (no metadata like "generated_by: canary_tool" etc.).
+11) Keep the configuration concise and realistic — avoid overly verbose debugging sections.
+
+FORMAT EXAMPLE (the LLM must follow this exact container syntax):
+--- FILE: opencanary.conf ---
+{{ 
+    "device.node_id": "fileserver-01",
+    "device.hostname": "fileserver-01",
+    "device.domain": "corp.local",
+    ...
+}}
+
+FINAL NOTES:
+- Use the supplied telemetry values as the primary source of truth; when uncertain, prefer realistic Windows server defaults.
+- The resulting JSON will be parsed and further post-processed by automation; ensure it is strictly valid JSON.
+
 """
-    return prompt
+    return prompt.strip()
+

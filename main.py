@@ -10,7 +10,7 @@ from preprocess.Clean_export import clean_wazuh_export
 from preprocess.Separate_OS import split_by_os
 from preprocess.Aggregate import aggregate_os_specific
 from LLM.cowrie_config import call_llm, save_files_from_response
-from LLM.windows_config import call_llm as call_llm_windows, save_files_from_response as save_files_from_response_windows
+from LLM.windows_config import generate_opencanary_from_prompt 
 from archive_and_cleanup import create_archives
 
 
@@ -20,7 +20,9 @@ if __name__=="__main__":
 
     token = generate_JWT_token()
     data = collect_all_syscollector(token)
+
     # Save raw Wazuh export data
+    os.makedirs("resources", exist_ok=True)
     with open("resources/wazuh_export.json", "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
     # Clean, aggregate and preprocess the data for AI input
@@ -46,8 +48,13 @@ if __name__=="__main__":
 
     with open("resources/windows_prompt.txt", "w", encoding="utf-8") as f:
         f.write(windows_prompt)
-    windows_response = call_llm_windows(windows_prompt)
-    save_files_from_response_windows(windows_response, output_dir="windows_output")
+    
+    # Generate OpenCanary config from Windows prompt
+    generate_opencanary_from_prompt(
+        prompt_path="resources/windows_prompt.txt",
+        output_dir="windows_output",
+        randomize_identity=True  # randomize identity to avoid collisions
+    )
 
     # archive and cleanup
     create_archives()

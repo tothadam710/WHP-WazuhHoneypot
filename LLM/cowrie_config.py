@@ -29,20 +29,20 @@ def sanitize_filename(name: str) -> str:
     - tiltja a '..' elemeket
     - kiszűri a tiltott karaktereket
     """
-    # Levágjuk a záró --- jelölést, ha van
+    # Strip leading/trailing dashes and whitespace
     name = re.sub(r"\s*-{2,}\s*$", "", name).strip()
 
-    # Normálizálás
+    # Normalization
     name = os.path.normpath(name)
 
-    # Tiltjuk a parent traversal-t és abszolút utakat
+    # Disallow parent traversal and absolute paths
     if os.path.isabs(name) or ".." in name.split(os.path.sep):
         name = os.path.basename(name)
 
-    # Windows meghajtó (C:\...) eltávolítása
+    # Remove Windows drive (C:\...) prefix
     name = re.sub(r"^[A-Za-z]:[\\/]", "", name)
 
-    # Tiltott karakterek helyett _
+    # Remove leading slashes or backslashes
     name = re.sub(r"[<>:\"|?*\x00-\x1F]", "_", name)
 
     if not name:
@@ -60,7 +60,7 @@ def save_files_from_response(response: str, output_dir="cowrie_output"):
     """
     os.makedirs(output_dir, exist_ok=True)
 
-    # Regex: filename + tartalom
+    # Regex: filename + content
     pattern = re.compile(
         r"---\s*FILE:\s*(.+?)\s*---\s*\n(.*?)(?=(?:\n---\s*FILE:)|\Z)",
         re.DOTALL | re.IGNORECASE
@@ -75,14 +75,14 @@ def save_files_from_response(response: str, output_dir="cowrie_output"):
         raw_filename = m.group(1)
         content = m.group(2).rstrip("\n")
 
-        # Több részes path engedélyezett (pl. etc/passwd)
+        # Strip leading/trailing whitespace
         parts = [p for p in re.split(r"[\\/]+", raw_filename) if p]
         safe_parts = [sanitize_filename(p) for p in parts]
 
         target_path = os.path.join(output_dir, *safe_parts)
         target_path = os.path.normpath(target_path)
 
-        # Biztonság: ne léphessen ki az output_dir-ből
+        # Security check: ensure target_path is within output_dir
         if not target_path.startswith(os.path.normpath(output_dir) + os.path.sep) \
            and target_path != os.path.normpath(output_dir):
             target_path = os.path.join(output_dir, sanitize_filename(raw_filename))
